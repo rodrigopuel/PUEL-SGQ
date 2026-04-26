@@ -84,15 +84,31 @@ input,select,textarea{font-family:var(--font)}
 
 /* LAYOUT */
 .app-body{display:flex;flex:1;overflow:hidden}
-.sidebar{width:220px;background:var(--bg2);border-right:1px solid var(--border);display:flex;flex-direction:column;flex-shrink:0;overflow-y:auto}
-.sidebar-section{padding:16px 12px 6px;font-size:10px;color:var(--text3);letter-spacing:2px;text-transform:uppercase;font-family:var(--font-mono)}
+.sidebar{width:220px;background:var(--bg2);border-right:1px solid var(--border);display:flex;flex-direction:column;flex-shrink:0;overflow-y:auto;transition:width .3s ease}
+.sidebar.collapsed{width:60px}
+.sidebar-toggle{display:flex;align-items:center;justify-content:center;padding:12px 8px;cursor:pointer;color:var(--text3);transition:all .15s;border-bottom:1px solid var(--border);position:relative}
+.sidebar-toggle:hover{background:var(--bg3);color:var(--text)}
+.sidebar-toggle svg{width:20px;height:20px;transition:transform .3s}
+.sidebar.collapsed .sidebar-toggle svg{transform:rotate(180deg)}
+.sidebar-toggle::after{content:'Recolher Menu';position:absolute;left:100%;top:50%;transform:translateY(-50%);margin-left:8px;background:var(--bg1);color:var(--text);padding:6px 10px;border-radius:6px;font-size:12px;white-space:nowrap;opacity:0;pointer-events:none;transition:opacity .2s;box-shadow:0 2px 8px rgba(0,0,0,0.2);z-index:100}
+.sidebar.collapsed .sidebar-toggle::after{content:'Expandir Menu'}
+.sidebar-toggle:hover::after{opacity:1}
+.sidebar-section{padding:16px 12px 6px;font-size:10px;color:var(--text3);letter-spacing:2px;text-transform:uppercase;font-family:var(--font-mono);transition:opacity .3s}
+.sidebar.collapsed .sidebar-section{opacity:0;height:0;padding:0;margin:0}
 .nav-item{display:flex;align-items:center;gap:10px;padding:9px 14px;cursor:pointer;transition:all .15s;color:var(--text2);font-size:13px;font-weight:500;border-left:3px solid transparent;margin:1px 0;-webkit-user-select:none;user-select:none}
 .nav-item:hover{background:var(--bg3);color:var(--text)}
 .nav-item.active{background:var(--bg3);color:var(--accent);border-left-color:var(--accent)}
 .nav-icon{width:16px;height:16px;opacity:.7;flex-shrink:0}
 .nav-item.active .nav-icon{opacity:1}
+.sidebar.collapsed .nav-item{justify-content:center;padding:16px 8px;position:relative}
+.sidebar.collapsed .nav-item span{display:none}
+.sidebar.collapsed .nav-icon{opacity:1;width:20px;height:20px}
+.sidebar.collapsed .nav-item::after{content:attr(data-tooltip);position:absolute;left:100%;top:50%;transform:translateY(-50%);margin-left:8px;background:var(--bg1);color:var(--text);padding:6px 10px;border-radius:6px;font-size:12px;white-space:nowrap;opacity:0;pointer-events:none;transition:opacity .2s;box-shadow:0 2px 8px rgba(0,0,0,0.2);z-index:100}
+.sidebar.collapsed .nav-item:hover::after{opacity:1}
+.sidebar.collapsed .nav-item:hover{background:var(--bg3)}
 
 /* OBRA SELECTOR - SIMPLE */
+.obra-selector{margin-bottom:8px}
 .obra-selector{margin-bottom:8px}
 .obra-selector-header{display:flex;align-items:center;gap:10px;padding:9px 14px;cursor:pointer;transition:all .15s;color:var(--text2);font-size:13px;font-weight:500;border-left:3px solid transparent;margin:1px 0}
 .obra-selector-header:hover{background:var(--bg3);color:var(--text)}
@@ -101,6 +117,14 @@ input,select,textarea{font-family:var(--font)}
 .obra-list{display:none;max-height:250px;overflow-y:auto;margin:4px 0}
 .obra-list.open{display:block}
 .obra-item{display:flex;align-items:center;gap:10px;padding:8px 14px 8px 28px;color:var(--text3);font-size:12px;cursor:pointer;transition:all .15s;border-left:3px solid transparent}
+.sidebar.collapsed .obra-selector{margin-bottom:8px}
+.sidebar.collapsed .obra-selector-header{justify-content:center;padding:16px 8px;position:relative}
+.sidebar.collapsed .obra-selector-header span{display:none}
+.sidebar.collapsed .obra-selector-header .obra-arrow{display:none}
+.sidebar.collapsed .obra-selector-header .nav-icon{width:20px;height:20px;opacity:1}
+.sidebar.collapsed .obra-selector-header::after{content:'Obra Atual';position:absolute;left:100%;top:50%;transform:translateY(-50%);margin-left:8px;background:var(--bg1);color:var(--text);padding:6px 10px;border-radius:6px;font-size:12px;white-space:nowrap;opacity:0;pointer-events:none;transition:opacity .2s;box-shadow:0 2px 8px rgba(0,0,0,0.2);z-index:100}
+.sidebar.collapsed .obra-selector-header:hover::after{opacity:1}
+.sidebar.collapsed .obra-selector-header:hover{background:var(--bg3)}
 .obra-item:hover{background:var(--bg3);color:var(--text)}
 .obra-item.selected{background:#1e1c14;color:var(--accent);border-left-color:var(--accent)}
 
@@ -139,6 +163,22 @@ tr:hover td{background:var(--bg3);color:var(--text)}
 .tag-rev{background:#1a2035;color:#60a5fa;border:1px solid #1e3a6e}
 .tag-vigor{background:#14532d;color:#4ade80;border:1px solid #166534}
 .tag-rascunho{background:#451a03;color:#fb923c;border:1px solid #7c2d12}
+
+.fornecedor-selector{position:relative}
+.fornecedor-lista{position:absolute;top:100%;left:0;right:0;background:var(--bg2);border:1px solid var(--border2);border-radius:var(--radius);max-height:200px;overflow-y:auto;z-index:10;box-shadow:0 4px 12px rgba(0,0,0,0.15)}
+.fornecedor-item{padding:10px 12px;cursor:pointer;border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between;gap:8px;transition:background-color .15s}
+.fornecedor-item:hover{background:var(--bg3)}
+.fornecedor-item:last-child{border-bottom:none}
+.fornecedor-item.selected{background:var(--accent);color:var(--bg2)}
+.fornecedor-info{flex:1}
+.fornecedor-nome{font-weight:500;color:var(--text);font-size:13px}
+.fornecedor-doc{font-size:11px;color:var(--text3);font-family:var(--font-mono)}
+.fornecedor-tipo{font-size:10px;margin-left:8px}
+
+.input-with-loading{position:relative}
+.loading-indicator{position:absolute;right:8px;top:50%;transform:translateY(-50%);display:flex;align-items:center;justify-content:center}
+.loading-spinner{width:16px;height:16px;border:2px solid var(--border);border-top:2px solid var(--accent);border-radius:50%;animation:spin 1s linear infinite}
+@keyframes spin{0%{transform:rotate(0deg)}100%{transform:rotate(360deg)}}
 
 .modal-overlay{display:none;position:fixed;inset:0;background:rgba(0,0,0,.8);z-index:100;align-items:center;justify-content:center;padding:16px}
 .modal-overlay.open{display:flex}
@@ -366,6 +406,10 @@ tr:hover td{background:var(--bg3);color:var(--text)}
             <svg class="gear-menu-icon" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5"><rect x="2" y="2" width="12" height="12" rx="2"/><path d="M5 6h6M5 9h6M5 12h4"/></svg>
             Template FVM
           </div>
+          <div class="gear-menu-item" onclick="navegar('fornecedores')">
+            <svg class="gear-menu-icon" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M3 2h10a1 1 0 011 1v10a1 1 0 01-1 1H3a1 1 0 01-1-1V3a1 1 0 011-1z"/><path d="M5 6h6M5 9h4"/></svg>
+            Fornecedores
+          </div>
           <div class="gear-menu-item" onclick="navegar('usuarios')">
             <svg class="gear-menu-icon" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5"><circle cx="6" cy="5" r="3"/><path d="M1 14c0-3 2-5 5-5"/><circle cx="12" cy="8" r="2"/><path d="M10 14c0-2 1-3 2-3s2 1 2 3"/></svg>
             Usuários
@@ -380,7 +424,12 @@ tr:hover td{background:var(--bg3);color:var(--text)}
     </div>
   </div>
   <div class="app-body">
-    <div class="sidebar">
+    <div class="sidebar" id="sidebar">
+      <div class="sidebar-toggle" onclick="toggleSidebar()" title="Recolher/Expandir Menu">
+        <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5">
+          <path d="M11 3L5 8l6 5"/>
+        </svg>
+      </div>
       <div class="obra-selector">
         <div class="obra-selector-header" onclick="toggleObraSelector(this)">
           <svg class="nav-icon" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M1 13V6l7-4 7 4v7"/><path d="M6 13V9h4v4"/></svg>
@@ -390,22 +439,22 @@ tr:hover td{background:var(--bg3);color:var(--text)}
         <div class="obra-list" id="obra-list"></div>
       </div>
       <div class="sidebar-section">PRINCIPAL</div>
-      <div class="nav-item active" onclick="navegar('dashboard')" id="nav-dashboard">
-        <svg class="nav-icon" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5"><rect x="1" y="1" width="6" height="6" rx="1"/><rect x="9" y="1" width="6" height="6" rx="1"/><rect x="1" y="9" width="6" height="6" rx="1"/><rect x="9" y="9" width="6" height="6" rx="1"/></svg>Dashboard
+      <div class="nav-item active" onclick="navegar('dashboard')" id="nav-dashboard" data-tooltip="Dashboard">
+        <svg class="nav-icon" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5"><rect x="1" y="1" width="6" height="6" rx="1"/><rect x="9" y="1" width="6" height="6" rx="1"/><rect x="1" y="9" width="6" height="6" rx="1"/><rect x="9" y="9" width="6" height="6" rx="1"/></svg><span>Dashboard</span>
       </div>
-      <div class="nav-item" onclick="navegar('alertas')" id="nav-alertas">
-        <svg class="nav-icon" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M8 1a5 5 0 015 5c0 4-5 8-5 8S3 10 3 6a5 5 0 015-5z"/><circle cx="8" cy="6" r="1.5" fill="currentColor"/></svg>Alertas
+      <div class="nav-item" onclick="navegar('alertas')" id="nav-alertas" data-tooltip="Alertas">
+        <svg class="nav-icon" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M8 1a5 5 0 015 5c0 4-5 8-5 8S3 10 3 6a5 5 0 015-5z"/><circle cx="8" cy="6" r="1.5" fill="currentColor"/></svg><span>Alertas</span>
       </div>
             <div class="sidebar-section">INSPEÇÃO</div>
-      <div class="nav-item" onclick="navegar('fvs')" id="nav-fvs">
-        <svg class="nav-icon" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M9 1H3a1 1 0 00-1 1v12a1 1 0 001 1h10a1 1 0 001-1V6L9 1z"/><path d="M9 1v5h5"/><path d="M5 9h6M5 12h4"/></svg>FVS
+      <div class="nav-item" onclick="navegar('fvs')" id="nav-fvs" data-tooltip="FVS">
+        <svg class="nav-icon" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M9 1H3a1 1 0 00-1 1v12a1 1 0 001 1h10a1 1 0 001-1V6L9 1z"/><path d="M9 1v5h5"/><path d="M5 9h6M5 12h4"/></svg><span>FVS</span>
       </div>
-      <div class="nav-item" onclick="navegar('fvm')" id="nav-fvm">
-        <svg class="nav-icon" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5"><rect x="2" y="2" width="12" height="12" rx="2"/><path d="M5 6h6M5 9h6M5 12h4"/></svg>FVM
+      <div class="nav-item" onclick="navegar('fvm')" id="nav-fvm" data-tooltip="FVM">
+        <svg class="nav-icon" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5"><rect x="2" y="2" width="12" height="12" rx="2"/><path d="M5 6h6M5 9h6M5 12h4"/></svg><span>FVM</span>
       </div>
             <div class="sidebar-section">RELATÓRIOS</div>
-      <div class="nav-item" onclick="navegar('dossie')" id="nav-dossie">
-        <svg class="nav-icon" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M2 3h12v10a1 1 0 01-1 1H3a1 1 0 01-1-1V3z"/><path d="M5 3V1M11 3V1M2 7h12M5 10h6M5 13h3"/></svg>Dossiê / PDF
+      <div class="nav-item" onclick="navegar('dossie')" id="nav-dossie" data-tooltip="Dossiê / PDF">
+        <svg class="nav-icon" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M3 3h10v1H3z"/><path d="M3 7h10v1H3z"/><path d="M3 11h7v1H3z"/></svg><span>Dossiê / PDF</span>
       </div>
       <div class="sidebar-bottom">
         <div style="font-size:10px;color:var(--text3);font-family:var(--font-mono);line-height:1.8">SGQ Puel v2.0<br>Sistema completo</div>
@@ -458,6 +507,29 @@ tr:hover td{background:var(--bg3);color:var(--text)}
   </div>
 </div>
 
+<!-- MODAL FORNECEDOR -->
+<div class="modal-overlay" id="modal-fornecedor">
+  <div class="modal">
+    <div class="modal-header"><div class="modal-title" id="modal-fornecedor-title">Novo fornecedor</div><button class="modal-close" onclick="fecharModal('modal-fornecedor')">×</button></div>
+    <div class="modal-body">
+      <div class="field"><label>Nome do fornecedor *</label><input type="text" id="fornecedor-nome"></div>
+      <div class="field"><label>Tipo de documento *</label><select id="fornecedor-tipo" onchange="atualizarMascaraDocumento()"><option value="cnpj">CNPJ</option><option value="cpf">CPF</option></select></div>
+      <div class="field"><label id="label-documento">CNPJ *</label>
+        <div class="input-with-loading">
+          <input type="text" id="fornecedor-documento" placeholder="00.000.000/0000-00" maxlength="18" oninput="consultarDocumento(this.value)">
+          <div id="fornecedor-loading" class="loading-indicator" style="display:none">
+            <div class="loading-spinner"></div>
+          </div>
+        </div>
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-secondary btn-sm" onclick="fecharModal('modal-fornecedor')">Cancelar</button>
+      <button class="btn btn-primary btn-sm" onclick="salvarFornecedor()">Salvar fornecedor</button>
+    </div>
+  </div>
+</div>
+
 <!-- MODAL NOVA FVS -->
 <div class="modal-overlay" id="modal-nova-fvs">
   <div class="modal">
@@ -491,10 +563,21 @@ tr:hover td{background:var(--bg3);color:var(--text)}
     <div class="modal-body">
       <div class="field"><label>Descrição do problema *</label><textarea id="ocorr-desc" placeholder="Descreva o problema identificado..." required></textarea></div>
       <div class="meta-grid">
-        <div class="field"><label>Ação tomada *</label><input type="text" id="ocorr-acao" required></div>
+        <div class="field"><label>Tipo de problema *</label><select id="ocorr-tipo" required>
+          <option value="">Selecione...</option>
+          <option value="mao_obra">Mão de obra</option>
+          <option value="material">Material</option>
+          <option value="metodo">Método</option>
+          <option value="medidas">Medidas</option>
+          <option value="maquinas">Máquinas</option>
+          <option value="meio_ambiente">Meio ambiente</option>
+        </select></div>
         <div class="field"><label>Responsável *</label><select id="ocorr-resp" required></select></div>
       </div>
-      <div class="field"><label>Prazo para correção *</label><input type="date" id="ocorr-prazo" required></div>
+      <div class="meta-grid">
+        <div class="field"><label>Ação tomada *</label><input type="text" id="ocorr-acao" required></div>
+        <div class="field"><label>Prazo para correção *</label><input type="date" id="ocorr-prazo" required></div>
+      </div>
     </div>
     <div class="modal-footer">
       <button class="btn btn-secondary btn-sm" onclick="fecharModal('modal-ocorr')">Cancelar</button>
@@ -537,6 +620,24 @@ tr:hover td{background:var(--bg3);color:var(--text)}
         <div class="field"><label>Plano de amostragem</label><select id="tpl-amostra"><option>100% do serviço</option><option>Por amostragem — 50%</option><option>Por amostragem — 25%</option><option>Por inspeção visual geral</option></select></div>
       </div>
       <div class="divider"></div>
+      <div class="field"><label>Tipo de serviço *</label><select id="tpl-disciplina" required>
+        <option value="">Selecione...</option>
+        <option value="terraplenagem">Terraplenagem</option>
+        <option value="fundacoes">Fundações</option>
+        <option value="estrutura">Estrutura</option>
+        <option value="alvenaria_vedacao">Alvenaria / Vedação</option>
+        <option value="instalacoes_hidrossanitarias">Instalações Hidrossanitárias</option>
+        <option value="instalacoes_eletricas">Instalações Elétricas</option>
+        <option value="instalacoes_especiais">Instalações Especiais</option>
+        <option value="impermeabilizacao">Impermeabilização</option>
+        <option value="esquadrias">Esquadrias</option>
+        <option value="revestimentos_argamassados">Revestimentos argamassados</option>
+        <option value="revestimentos_colados_fixados">Revestimentos coladados e fixados</option>
+        <option value="pintura">Pintura</option>
+        <option value="cobertura">Cobertura</option>
+        <option value="urbanizacao">Urbanização</option>
+      </select></div>
+      <div class="divider"></div>
       <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:10px">
         <div style="font-size:11px;font-family:var(--font-mono);color:var(--text3);letter-spacing:1px;text-transform:uppercase">Critérios de verificação</div>
         <span id="crit-count" style="font-size:11px;color:var(--text3);font-family:var(--font-mono)">0 critérios</span>
@@ -549,8 +650,7 @@ tr:hover td{background:var(--bg3);color:var(--text)}
     </div>
     <div class="modal-footer">
       <button class="btn btn-secondary btn-sm" onclick="fecharModal('modal-template')">Cancelar</button>
-      <button class="btn btn-ghost btn-sm" onclick="salvarTemplate('rascunho')">Salvar rascunho</button>
-      <button class="btn btn-primary btn-sm" onclick="salvarTemplate('vigor')">Publicar — colocar em vigor</button>
+      <button class="btn btn-primary btn-sm" onclick="salvarTemplate()">Salvar template</button>
     </div>
   </div>
 </div>
@@ -647,7 +747,7 @@ function mkCrit(item,metodo,tolerancia){return{id:mkId('c'),item:item||'',metodo
 function esc(s){return(s||'').replace(/&/g,'&amp;').replace(/"/g,'&quot;').replace(/'/g,'&#39;').replace(/</g,'&lt;').replace(/>/g,'&gt;');}
 
 function seedDados(){
-  const versao='v14';
+  const versao='v15';
   if(DB.get('seed_versao')===versao)return;
   const agora=new Date().toISOString();
   const d=dias=>new Date(Date.now()-dias*86400000).toISOString();
@@ -738,6 +838,21 @@ function seedDados(){
      notaFinal:85,resultado:null
     }
   ]);
+  
+  // Criar template FVM padrão
+  const templateFVMBase = templateFVMDefault();
+  DB.set('templates_fvm', [templateFVMBase]);
+  
+  // Criar fornecedores iniciais
+  DB.set('fornecedores', [
+    {id:'f1',nome:'Construtora ABC Ltda',documento:'12345678000190',tipoDocumento:'cnpj',status:'ativo',criado:agora},
+    {id:'f2',nome:'Material Center',documento:'98765432000110',tipoDocumento:'cnpj',status:'ativo',criado:agora},
+    {id:'f3',nome:'Cimento Nacional S/A',documento:'45678901000123',tipoDocumento:'cnpj',status:'ativo',criado:agora},
+    {id:'f4',nome:'João Silva ME',documento:'12345678901',tipoDocumento:'cpf',status:'ativo',criado:agora},
+    {id:'f5',nome:'Maria Santos',documento:'98765432100',tipoDocumento:'cpf',status:'ativo',criado:agora},
+    {id:'f6',nome:'Aços Brasil',documento:'78901234000145',tipoDocumento:'cnpj',status:'inativo',criado:agora}
+  ]);
+  
   DB.set('seed_versao',versao);
 }
 
@@ -751,15 +866,40 @@ function fazerLogin(){
   usuarioAtual=user;DB.set('sessao',user.id);iniciarApp();
 }
 function fazerLogout(){usuarioAtual=null;DB.set('sessao',null);mostrarTela('screen-login');}
+
+// ── MENU RECOLHÍVEL ───────────────────────────────────────
+function toggleSidebar(){
+  const sidebar=document.getElementById('sidebar');
+  const isCollapsed=sidebar.classList.contains('collapsed');
+  
+  if(isCollapsed){
+    sidebar.classList.remove('collapsed');
+    localStorage.setItem('sidebar_collapsed','false');
+  }else{
+    sidebar.classList.add('collapsed');
+    localStorage.setItem('sidebar_collapsed','true');
+  }
+}
+
+function initSidebar(){
+  const sidebar=document.getElementById('sidebar');
+  const savedState=localStorage.getItem('sidebar_collapsed');
+  
+  if(savedState==='true'){
+    sidebar.classList.add('collapsed');
+  }
+}
+
 function iniciarApp(){
   document.getElementById('user-name-display').textContent=usuarioAtual.nome.split(' ')[0];
   document.getElementById('user-avatar').textContent=usuarioAtual.nome[0];
   renderObraList();
+  initSidebar(); // Inicializar menu recolhível
   mostrarTela('screen-app');navegar('dashboard');
 }
 function mostrarTela(id){document.querySelectorAll('.screen').forEach(s=>s.classList.remove('active'));document.getElementById(id).classList.add('active');}
 
-const SECOES={dashboard:'Dashboard',alertas:'Alertas',obras:'Obras',fvs:'FVS',fvm:'FVM',templates:'Templates FVS','templates-fvm':'Template FVM',dossie:'Dossiê / PDF',usuarios:'Usuários'};
+const SECOES={dashboard:'Dashboard',alertas:'Alertas',obras:'Obras',fvs:'FVS',fvm:'FVM',templates:'Templates FVS','templates-fvm':'Template FVM',dossie:'Dossiê / PDF',fornecedores:'Fornecedores',usuarios:'Usuários'};
 function navegar(s){
   document.querySelectorAll('.nav-item').forEach(n=>n.classList.remove('active'));
   const nav=document.getElementById('nav-'+s);if(nav)nav.classList.add('active');
@@ -767,7 +907,7 @@ function navegar(s){
   // Update gear menu active state
   document.querySelectorAll('.gear-menu-item').forEach(item=>item.classList.remove('active'));
   const gearItems = document.querySelectorAll('.gear-menu-item');
-  const gearIndex = ['obras','templates','templates-fvm','usuarios'].indexOf(s);
+  const gearIndex = ['obras','templates','templates-fvm','fornecedores','usuarios'].indexOf(s);
   if (gearIndex !== -1) {
     gearItems[gearIndex].classList.add('active');
   }
@@ -777,16 +917,15 @@ function navegar(s){
   
   document.getElementById('topbar-section').textContent=SECOES[s]||s;
   const m=document.getElementById('main-content');
-  ({dashboard:renderDashboard,alertas:renderAlertas,obras:renderObras,fvs:renderFVS,fvm:renderFVM,templates:renderTemplates,'templates-fvm':renderTemplatesFVM,dossie:renderDossie,usuarios:renderUsuarios}[s]||function(){})(m);
+  ({dashboard:renderDashboard,alertas:renderAlertas,obras:renderObras,fvs:renderFVS,fvm:renderFVM,templates:renderTemplates,'templates-fvm':renderTemplatesFVM,dossie:renderDossie,fornecedores:renderFornecedores,usuarios:renderUsuarios}[s]||function(){})(m);
 }
 
 function calcStats(fvs){
-  const tpl=DB.getArr('templates').find(t=>t.id===fvs.templateId);
-  if(!tpl)return{total:0,C:0,NC:0,RC:0,NA:0,blank:0,pct:0,ica:0};
-  const total=(tpl.criterios||[]).length*(fvs.locais||[]).length;
+  if(!fvs)return{total:0,C:0,NC:0,RC:0,NA:0,blank:0,pct:0,ica:0};
   let C=0,NC=0,RC=0,NA=0;
   Object.values(fvs.resultados||{}).forEach(v=>{if(v==='C')C++;else if(v==='NC')NC++;else if(v==='RC')RC++;else if(v==='NA')NA++;});
-  const blank=total-C-NC-RC-NA;
+  const total=C+NC+RC+NA;
+  const blank=0; // Não há células em branco quando calculamos com base nos resultados existentes
   return{total,C,NC,RC,NA,blank,pct:total>0?Math.round((C+RC+NA)/total*100):0,ica:total>0?Math.round(C/total*100):0};
 }
 function statsObra(obraId){
@@ -836,9 +975,10 @@ function renderDashboard(m){
     </div></div>
     <div class="kpi-grid">
       <div class="kpi-card k-accent"><div class="kpi-label">${obraSelecionada?'Obra selecionada':'Obras ativas'}</div><div class="kpi-value" style="color:var(--accent)">${obras.length}</div><div class="kpi-sub">${obraSelecionada?'filtro aplicado':'em andamento'}</div></div>
-      <div class="kpi-card k-green"><div class="kpi-label">ICA Geral</div><div class="kpi-value" style="color:var(--green)">${icaGeral}%</div><div class="kpi-sub">índice de conformidade</div></div>
+      <div class="kpi-card k-green"><div class="kpi-label">ICA Geral</div><div class="kpi-value" style="color:var(--green)">${icaGeral}%</div><div class="kpi-sub">índice de conformidade na 1ª insp.</div></div>
       <div class="kpi-card k-amber"><div class="kpi-label">FVS em andamento</div><div class="kpi-value" style="color:var(--amber)">${fl.filter(f=>f.status==='andamento').length}</div><div class="kpi-sub">${fl.filter(f=>f.status==='encerrada').length} encerradas</div></div>
       <div class="kpi-card k-red"><div class="kpi-label">NC abertas</div><div class="kpi-value" style="color:var(--red)">${totalNC}</div><div class="kpi-sub">pendentes de correção</div></div>
+      <div class="kpi-card k-accent"><div class="kpi-label">FVM em andamento</div><div class="kpi-value" style="color:var(--accent)">${DB.getArr('fvm').filter(f=>obrasIds.has(f.obraId)&&f.status==='andamento').length}</div><div class="kpi-sub">${DB.getArr('fvm').filter(f=>obrasIds.has(f.obraId)&&f.status==='encerrada').length} encerradas</div></div>
     </div>
     <div style="font-size:11px;font-family:var(--font-mono);color:var(--text3);letter-spacing:1px;text-transform:uppercase;margin-bottom:12px">${obraSelecionada?'Desempenho da obra selecionada':'Desempenho por obra'}</div>
     ${obras.map(o=>{
@@ -868,6 +1008,11 @@ function renderDashboard(m){
     <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-top:4px">
       <div class="chart-wrap"><div class="chart-title">ICA por serviço</div><div class="bar-chart">${gerarBarras(fl)}</div></div>
       <div class="chart-wrap"><div class="chart-title">Distribuição de resultados</div>${gerarDonut(fl)}</div>
+    </div>
+    <div style="font-size:11px;font-family:var(--font-mono);color:var(--text3);letter-spacing:1px;text-transform:uppercase;margin:16px 0 12px">Análise de não conformidades</div>
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px">
+      <div class="chart-wrap"><div class="chart-title">NC por Tipo de serviço</div>${gerarDonutNCTipoServico(fl)}</div>
+      <div class="chart-wrap"><div class="chart-title">NC por Tipo de problema</div>${gerarDonutNCTipoProblema(fl)}</div>
     </div>`;
 }
 
@@ -897,6 +1042,162 @@ function gerarDonut(fl){
       <text x="${cx}" y="${cy+16}" text-anchor="middle" font-size="8" fill="var(--text3)" font-family="'JetBrains Mono'">ICA</text>
     </svg>
     <div class="donut-legenda">${labels.map((l,i)=>`<div class="donut-leg-item"><div class="donut-dot" style="background:${cors[i]}"></div>${l} <strong style="color:var(--text);margin-left:4px">${vals[i]}</strong></div>`).join('')}</div>
+  </div>`;
+}
+
+function gerarDonutNCTipoServico(fl){
+  const tipoServicoCounts = {};
+  const templates = DB.getArr('templates');
+  
+  fl.forEach(fvs => {
+    const template = templates.find(t => t.id === fvs.templateId);
+    if (template && template.disciplina) {
+      const servicos = fvs.ocorrencias || [];
+      servicos.forEach(oc => {
+        // Incluir NCs de ambos os status: aberta (andamento) e encerrada
+        if (oc.status === 'aberta' || oc.status === 'encerrada') {
+          const servico = template.disciplina;
+          // Mapear o valor para o nome amigável
+          const servicoLabels = {
+            'terraplenagem': 'Terraplenagem',
+            'fundacoes': 'Fundações',
+            'estrutura': 'Estrutura',
+            'alvenaria_vedacao': 'Alvenaria / Vedação',
+            'instalacoes_hidrossanitarias': 'Instalações Hidrossanitárias',
+            'instalacoes_eletricas': 'Instalações Elétricas',
+            'instalacoes_especiais': 'Instalações Especiais',
+            'impermeabilizacao': 'Impermeabilização',
+            'esquadrias': 'Esquadrias',
+            'revestimentos_argamassados': 'Revestimentos argamassados',
+            'revestimentos_colados_fixados': 'Revestimentos coladados e fixados',
+            'pintura': 'Pintura',
+            'cobertura': 'Cobertura',
+            'urbanizacao': 'Urbanização'
+          };
+          const servicoNome = servicoLabels[servico] || servico;
+          tipoServicoCounts[servicoNome] = (tipoServicoCounts[servicoNome] || 0) + 1;
+        }
+      });
+    }
+  });
+  
+  if (Object.keys(tipoServicoCounts).length === 0) {
+    return `<div class="donut-wrap">
+      <div style="text-align:center;padding:40px;color:var(--text3);font-size:13px">
+        <div style="margin-bottom:8px">📊</div>
+        <div>Sem NC registradas</div>
+        <div style="font-size:11px;margin-top:4px">por tipo de serviço</div>
+      </div>
+    </div>`;
+  }
+  
+  const entries = Object.entries(tipoServicoCounts).sort((a, b) => b[1] - a[1]);
+  const total = entries.reduce((sum, [_, count]) => sum + count, 0);
+  
+  // Limitar aos 5 principais tipos
+  const topEntries = entries.slice(0, 5);
+  if (entries.length > 5) {
+    const outrosTotal = entries.slice(5).reduce((sum, [_, count]) => sum + count, 0);
+    topEntries.push(['Outros', outrosTotal]);
+  }
+  
+  const colors = ['#ef4444', '#f97316', '#eab308', '#84cc16', '#06b6d4', '#8b5cf6'];
+  const r = 44, circ = 2 * Math.PI * r, cx = 60, cy = 60;
+  let offset = 0;
+  
+  const segments = topEntries.map(([servico, count], i) => {
+    const percentage = count / total;
+    const dashArray = percentage * circ;
+    const dashOffset = -offset * circ;
+    offset += percentage;
+    
+    return `<circle cx="${cx}" cy="${cy}" r="${r}" fill="none" stroke="${colors[i % colors.length]}" stroke-width="16" stroke-dasharray="${dashArray} ${circ - dashArray}" stroke-dashoffset="${dashOffset}" transform="rotate(-90 ${cx} ${cy})"/>`;
+  });
+  
+  return `<div class="donut-wrap">
+    <svg width="120" height="120" viewBox="0 0 120 120">
+      <circle cx="${cx}" cy="${cy}" r="${r}" fill="none" stroke="var(--bg3)" stroke-width="16"/>
+      ${segments.join('')}
+      <text x="${cx}" y="${cy}" text-anchor="middle" dominant-baseline="central" font-family="'Barlow Condensed'" font-weight="700" font-size="16" fill="var(--text)">${total}</text>
+      <text x="${cx}" y="${cy+14}" text-anchor="middle" font-size="8" fill="var(--text3)" font-family="'JetBrains Mono'">NC</text>
+    </svg>
+    <div class="donut-legenda">
+      ${topEntries.map(([servico, count], i) => `
+        <div class="donut-leg-item">
+          <div class="donut-dot" style="background:${colors[i % colors.length]}"></div>
+          <div style="flex:1;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:120px" title="${servico}">${servico}</div> 
+          <strong style="color:var(--text);margin-left:4px">${count}</strong>
+        </div>
+      `).join('')}
+    </div>
+  </div>`;
+}
+
+function gerarDonutNCTipoProblema(fl){
+  const tipoProblemaCounts = {};
+  
+  fl.forEach(fvs => {
+    const servicos = fvs.ocorrencias || [];
+    servicos.forEach(oc => {
+      // Incluir NCs de ambos os status: aberta (andamento) e encerrada
+      if ((oc.status === 'aberta' || oc.status === 'encerrada') && oc.tipo) {
+        // Mapear o valor para o nome amigável
+        const problemaLabels = {
+          'mao_obra': 'Mão de obra',
+          'material': 'Material',
+          'metodo': 'Método',
+          'medidas': 'Medidas',
+          'maquinas': 'Máquinas',
+          'meio_ambiente': 'Meio ambiente'
+        };
+        const problemaNome = problemaLabels[oc.tipo] || oc.tipo;
+        tipoProblemaCounts[problemaNome] = (tipoProblemaCounts[problemaNome] || 0) + 1;
+      }
+    });
+  });
+  
+  if (Object.keys(tipoProblemaCounts).length === 0) {
+    return `<div class="donut-wrap">
+      <div style="text-align:center;padding:40px;color:var(--text3);font-size:13px">
+        <div style="margin-bottom:8px">📊</div>
+        <div>Sem NC registradas</div>
+        <div style="font-size:11px;margin-top:4px">por tipo de problema</div>
+      </div>
+    </div>`;
+  }
+  
+  const entries = Object.entries(tipoProblemaCounts).sort((a, b) => b[1] - a[1]);
+  const total = entries.reduce((sum, [_, count]) => sum + count, 0);
+  
+  const colors = ['#dc2626', '#ea580c', '#ca8a04', '#16a34a', '#0891b2', '#7c3aed'];
+  const r = 44, circ = 2 * Math.PI * r, cx = 60, cy = 60;
+  let offset = 0;
+  
+  const segments = entries.map(([problema, count], i) => {
+    const percentage = count / total;
+    const dashArray = percentage * circ;
+    const dashOffset = -offset * circ;
+    offset += percentage;
+    
+    return `<circle cx="${cx}" cy="${cy}" r="${r}" fill="none" stroke="${colors[i % colors.length]}" stroke-width="16" stroke-dasharray="${dashArray} ${circ - dashArray}" stroke-dashoffset="${dashOffset}" transform="rotate(-90 ${cx} ${cy})"/>`;
+  });
+  
+  return `<div class="donut-wrap">
+    <svg width="120" height="120" viewBox="0 0 120 120">
+      <circle cx="${cx}" cy="${cy}" r="${r}" fill="none" stroke="var(--bg3)" stroke-width="16"/>
+      ${segments.join('')}
+      <text x="${cx}" y="${cy}" text-anchor="middle" dominant-baseline="central" font-family="'Barlow Condensed'" font-weight="700" font-size="16" fill="var(--text)">${total}</text>
+      <text x="${cx}" y="${cy+14}" text-anchor="middle" font-size="8" fill="var(--text3)" font-family="'JetBrains Mono'">NC</text>
+    </svg>
+    <div class="donut-legenda">
+      ${entries.map(([problema, count], i) => `
+        <div class="donut-leg-item">
+          <div class="donut-dot" style="background:${colors[i % colors.length]}"></div>
+          <div style="flex:1;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:120px" title="${problema}">${problema}</div> 
+          <strong style="color:var(--text);margin-left:4px">${count}</strong>
+        </div>
+      `).join('')}
+    </div>
   </div>`;
 }
 
@@ -1118,7 +1419,9 @@ function criarFVS(){
   
   const tpl=DB.getArr('templates').find(t=>t.id===templateId);
   const num=String(DB.getArr('fvs').length+1).padStart(3,'0');
-  const nova={id:mkId('fvs'),cod:`FVS-${new Date().getFullYear()}-${num}`,obraId,templateId,servico:tpl.servico,locais:locais,inspectorId,status:'andamento',abertura:new Date().toISOString(),fechamento:null,obsFinais:'',resultados:{},ocorrencias:[]};
+  // Salvar uma cópia dos critérios do template no momento da criação
+  const criteriosSalvos=(tpl.criterios||[]).map(c=>({...c}));
+  const nova={id:mkId('fvs'),cod:`FVS-${new Date().getFullYear()}-${num}`,obraId,templateId,servico:tpl.servico,criterios:criteriosSalvos,locais:locais,inspectorId,status:'andamento',abertura:new Date().toISOString(),fechamento:null,obsFinais:'',resultados:{},ocorrencias:[]};
   DB.push('fvs',nova);fecharModal('modal-nova-fvs');toast('FVS aberta com sucesso','success');verFVS(nova.id);
 }
 
@@ -1182,7 +1485,7 @@ function verFVS(id){
     <div class="table-wrap">
       <div style="padding:11px 16px;border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between">
         <span style="font-size:13px;font-weight:600">Grade de inspeção</span>
-        <span style="font-size:11px;color:var(--text3);font-family:var(--font-mono)">${(tpl?.criterios||[]).length} itens × ${fvs.locais.length} locais</span>
+        <span style="font-size:11px;color:var(--text3);font-family:var(--font-mono)">${(fvs.criterios||tpl?.criterios||[]).length} itens × ${fvs.locais.length} locais</span>
       </div>
       <div style="overflow-x:auto">${renderGrade(fvs,tpl,enc)}</div>
     </div>
@@ -1190,8 +1493,40 @@ function verFVS(id){
     ${enc&&fvs.obsFinais?`<div class="table-wrap" style="margin-top:12px"><div style="padding:11px 16px;border-bottom:1px solid var(--border)"><span style="font-size:13px;font-weight:600">Observações finais</span></div><div style="padding:14px 16px;font-size:13px;color:var(--text2);line-height:1.6">${fvs.obsFinais}</div></div>`:''}`;
 }
 
+function migrarFVSExistentes(){
+  const fvsList=DB.getArr('fvs');
+  const templates=DB.getArr('templates');
+  let migrados=0;
+  
+  fvsList.forEach(fvs => {
+    // Se já tem critérios salvos, não precisa migrar
+    if(fvs.criterios && fvs.criterios.length > 0) return;
+    
+    const tpl=templates.find(t=>t.id===fvs.templateId);
+    if(tpl && tpl.criterios){
+      // Salvar cópia dos critérios do template
+      const criteriosSalvos=tpl.criterios.map(c=>({...c}));
+      DB.update('fvs', fvs.id, {criterios: criteriosSalvos});
+      migrados++;
+    }
+  });
+  
+  if(migrados > 0){
+    console.log(`Migrados ${migrados} FVS para usar critérios salvos`);
+  }
+}
+
 function renderGrade(fvs,tpl,enc){
-  const crits=tpl?.criterios||[];const locais=fvs.locais||[];
+  // Migrar FVS existentes se necessário
+  if(!fvs.criterios && tpl?.criterios){
+    const criteriosSalvos=tpl.criterios.map(c=>({...c}));
+    DB.update('fvs', fvs.id, {criterios: criteriosSalvos});
+    fvs.criterios=criteriosSalvos;
+  }
+  
+  // Usar critérios salvos na FVS em vez do template atual
+  const crits=fvs.criterios||tpl?.criterios||[];
+  const locais=fvs.locais||[];
   if(!crits.length||!locais.length)return'';
   let cellId=0;
   const cellMap={};
@@ -1231,6 +1566,14 @@ function renderGrade(fvs,tpl,enc){
 function renderOcorrencias(fvs,enc){
   const ocs=fvs.ocorrencias||[];if(!ocs.length)return'';
   const users=DB.getArr('usuarios');
+  const tipoLabels={
+    'mao_obra':'Mão de obra',
+    'material':'Material',
+    'metodo':'Método',
+    'medidas':'Medidas',
+    'maquinas':'Máquinas',
+    'meio_ambiente':'Meio ambiente'
+  };
   return`<div class="ocorrencias-section">
     <div class="ocorrencias-title">Ocorrências<span class="ocorrencias-badge">${ocs.filter(o=>o.status==='aberta').length} em aberto</span></div>
     ${ocs.map(oc=>{const resp=users.find(u=>u.id===oc.respId);const rc=oc.status==='encerrada';
@@ -1243,6 +1586,7 @@ function renderOcorrencias(fvs,enc){
           </div>
         </div>
         <div style="font-size:12px;color:var(--text2);margin-bottom:6px;line-height:1.5">${oc.desc}</div>
+        ${oc.tipo?`<div style="font-size:12px;color:var(--text3)"><strong style="color:var(--text2)">Tipo:</strong> ${tipoLabels[oc.tipo]||oc.tipo}</div>`:''}
         ${oc.acao?`<div style="font-size:12px;color:var(--text3)"><strong style="color:var(--text2)">Ação:</strong> ${oc.acao}</div>`:''}
         <div style="display:flex;gap:14px;margin-top:6px;flex-wrap:wrap;font-size:11px;color:var(--text3)">
           ${resp?`<span>Resp.: <strong style="color:var(--text2)">${resp.nome.split(' ')[0]}</strong></span>`:''}
@@ -1292,7 +1636,7 @@ function registrar(fvsId,critId,local,valorAtual,critItem){
 function abrirModalOcorr(){
   if(!ocorrCtx)return;
   document.getElementById('ocorr-sub').textContent=`${ocorrCtx.critItem} · ${ocorrCtx.local}`;
-  document.getElementById('ocorr-desc').value='';document.getElementById('ocorr-acao').value='';document.getElementById('ocorr-prazo').value='';
+  document.getElementById('ocorr-desc').value='';document.getElementById('ocorr-tipo').value='';document.getElementById('ocorr-acao').value='';document.getElementById('ocorr-prazo').value='';
   document.getElementById('ocorr-resp').innerHTML=DB.getArr('usuarios').filter(u=>u.ativo).map(u=>`<option value="${u.id}"${u.id===usuarioAtual.id?' selected':''}>${u.nome}</option>`).join('');
   document.getElementById('modal-ocorr').classList.add('open');
 }
@@ -1300,10 +1644,12 @@ function salvarOcorrencia(){
   if(!ocorrCtx)return;
   const fvsId=ocorrCtx.fvsId;
   const desc=document.getElementById('ocorr-desc').value.trim();
+  const tipo=document.getElementById('ocorr-tipo').value;
   const acao=document.getElementById('ocorr-acao').value.trim();
   const respId=document.getElementById('ocorr-resp').value;
   const prazo=document.getElementById('ocorr-prazo').value;
   if(!desc){toast('Preencha a descrição do problema','error');return;}
+  if(!tipo){toast('Selecione o tipo de problema','error');return;}
   if(!acao){toast('Preencha a ação tomada','error');return;}
   if(!respId){toast('Selecione o responsável','error');return;}
   if(!prazo){toast('Informe o prazo para correção','error');return;}
@@ -1311,7 +1657,7 @@ function salvarOcorrencia(){
   if(anoPrazo.length!==4||!/^\d{4}$/.test(anoPrazo)){toast('Ano do prazo deve ter exatamente 4 dígitos','error');return;}
   const fvs=DB.getArr('fvs').find(f=>f.id===fvsId);if(!fvs)return;
   // Only save the occurrence, don't change the cell value (it should already be NC)
-  DB.update('fvs',fvsId,{ocorrencias:[...(fvs.ocorrencias||[]),{id:mkId('oc'),critId:ocorrCtx.critId,critItem:ocorrCtx.critItem,local:ocorrCtx.local,desc,acao,respId,prazo,status:'aberta',abertura:new Date().toISOString()}]});
+  DB.update('fvs',fvsId,{ocorrencias:[...(fvs.ocorrencias||[]),{id:mkId('oc'),critId:ocorrCtx.critId,critItem:ocorrCtx.critItem,local:ocorrCtx.local,desc,tipo,acao,respId,prazo,status:'aberta',abertura:new Date().toISOString()}]});
   toast('NC registrada','success');
   fecharModalEspecial('modal-ocorr');
   verFVS(fvsId);
@@ -1489,12 +1835,15 @@ function selecionarTemplateFVMParaNova(templateId){
   // Criar nova FVM
   const agora=new Date().toISOString();
   const num=String(DB.getArr('fvm').length+1).padStart(3,'0');
+  // Salvar uma cópia dos critérios do template no momento da criação
+  const criteriosSalvos=(tpl.criterios||[]).map(c=>({...c}));
   const novaFVM={
     id:'fvm'+Date.now(),
     cod:`FVM-${new Date().getFullYear()}-${num}`,
     obraId:obraSelecionada.id,
     templateId:templateId,
     servico:tpl.nome,
+    criterios:criteriosSalvos,
     inspetorId:usuarioAtual.id,
     status:'andamento',
     abertura:agora,
@@ -1554,8 +1903,17 @@ function verFVM(fvmId){
 }
 
 function renderFormFVM(fvm, tpl, encerrada=false){
+  // Migrar FVM existente se necessário
+  if(!fvm.criterios && tpl?.criterios){
+    const criteriosSalvos=tpl.criterios.map(c=>({...c}));
+    DB.update('fvm', fvm.id, {criterios: criteriosSalvos});
+    fvm.criterios=criteriosSalvos;
+  }
+  
   const dados=fvm.dados || {};
   const inspector=DB.getArr('usuarios').find(u=>u.id===fvm.inspetorId);
+  // Usar critérios salvos na FVM em vez do template atual
+  const crits=fvm.criterios||tpl?.criterios||[];
   return`
     <div class="table-wrap" style="padding:16px">
       <div style="font-size:13px;font-weight:600;margin-bottom:12px">Dados da Verificação <span style="color:var(--red);font-size:11px">* Todos os campos são obrigatórios</span></div>
@@ -1563,11 +1921,15 @@ function renderFormFVM(fvm, tpl, encerrada=false){
         <div class="field"><label>Responsável pela inspeção *</label><input type="text" value="${esc(dados.responsavel||inspector?.nome||'')}" ${encerrada?'disabled':''} required onchange="atualizarDadosFVM('${fvm.id}','responsavel',this.value)" placeholder="Nome do responsável"></div>
         <div class="field"><label>Registro de Compra n° *</label><input type="text" value="${esc(dados.registroCompra||'')}" ${encerrada?'disabled':''} required onchange="atualizarDadosFVM('${fvm.id}','registroCompra',this.value)" placeholder="Número do registro"></div>
         <div class="field"><label>Data do recebimento *</label><input type="date" value="${dados.dataRecebimento||''}" ${encerrada?'disabled':''} required onchange="atualizarDadosFVM('${fvm.id}','dataRecebimento',this.value)"></div>
-        <div class="field"><label>Fornecedor *</label><input type="text" value="${esc(dados.fornecedor||'')}" ${encerrada?'disabled':''} required onchange="atualizarDadosFVM('${fvm.id}','fornecedor',this.value)" placeholder="Nome do fornecedor"></div>
+        <div class="field"><label>Fornecedor *</label><div class="fornecedor-selector">
+          <input type="text" id="fornecedor-busca-${fvm.id}" value="${esc(dados.fornecedorNome||'')}" ${encerrada?'disabled':''} required placeholder="Digite para buscar fornecedores..." oninput="buscarFornecedores('${fvm.id}',this.value)" onfocus="mostrarListaFornecedores('${fvm.id}')" onblur="ocultarListaFornecedores('${fvm.id}')">
+          <input type="hidden" id="fornecedor-id-${fvm.id}" value="${esc(dados.fornecedorId||'')}" onchange="atualizarDadosFVM('${fvm.id}','fornecedorId',this.value)">
+          <div id="fornecedor-lista-${fvm.id}" class="fornecedor-lista" style="display:none"></div>
+        </div></div>
       </div>
       <div class="divider"></div>
       <div style="font-size:13px;font-weight:600;margin-bottom:12px">Critérios de Verificação <span style="color:var(--red);font-size:11px">* Todos os critérios são obrigatórios</span></div>
-      ${(tpl?.criterios||[]).map((c,i)=>`
+      ${crits.map((c,i)=>`
         <div style="background:var(--bg3);border:1px solid var(--border);border-radius:var(--radius);padding:12px 14px;margin-bottom:10px">
           <div style="font-size:13px;font-weight:600;margin-bottom:8px">${i+1}. ${esc(c.titulo)} *</div>
           <div style="font-size:12px;color:var(--text3);margin-bottom:8px">Tipo: ${TIPOS_RESPOSTA_FVM.find(t=>t.id===c.tipo)?.label||'SIM / NÃO'}</div>
@@ -1664,7 +2026,7 @@ function salvarFVM(fvmId){
   const tpl=DB.getArr('templates_fvm').find(t=>t.id===fvm.templateId);
   
   // Validar campos obrigatórios dos dados da verificação
-  const camposObrigatorios=['responsavel','registroCompra','dataRecebimento','fornecedor','resultado','notaFinal'];
+  const camposObrigatorios=['responsavel','registroCompra','dataRecebimento','fornecedorId','fornecedorNome','resultado','notaFinal'];
   const camposFaltantes=camposObrigatorios.filter(campo=>!dados[campo] || dados[campo].trim() === '');
   
   if(camposFaltantes.length > 0){
@@ -1672,7 +2034,8 @@ function salvarFVM(fvmId){
       'responsavel':'Responsável pela inspeção',
       'registroCompra':'Registro de Compra',
       'dataRecebimento':'Data do recebimento',
-      'fornecedor':'Fornecedor',
+      'fornecedorId':'Fornecedor',
+      'fornecedorNome':'Nome do fornecedor',
       'resultado':'Resultado da inspeção',
       'notaFinal':'Nota final'
     };
@@ -2030,7 +2393,10 @@ function verHistoricoFVM(id){
     <div class="hist-row">
       <span class="hist-rev ${i===0?'atual':''}">${h.rev}</span>
       <div class="hist-info"><div class="hist-data">${new Date(h.data).toLocaleDateString('pt-BR',{day:'2-digit',month:'2-digit',year:'numeric',hour:'2-digit',minute:'2-digit'})}</div><div class="hist-desc">${h.descricao}</div></div>
-      <button class="btn btn-ghost btn-xs" onclick="verVersaoTemplateFVM('${tpl.id}',${(tpl.historico||[]).length-1-i})">Ver versão</button>
+      <div style="display:flex;gap:6px;align-items:center">
+        ${i===0 ? `<span class="tag tag-vigor">EM VIGOR</span>` : `<span class="tag tag-rascunho">HISTÓRICO</span>`}
+        <button class="btn btn-ghost btn-xs" onclick="verVersaoTemplateFVM('${tpl.id}',${(tpl.historico||[]).length-1-i})">Ver versão</button>
+      </div>
     </div>`).join('');
   document.getElementById('modal-historico').classList.add('open');
 }
@@ -2063,25 +2429,23 @@ function verVersaoTemplateFVM(templateId,histIndex){
 function renderTemplates(m){
   const tplsFVS=DB.getArr('templates');
   const pA=['diretor','admin','engenheiro'].includes(usuarioAtual.perfil);
-  const vigorFVS=tplsFVS.filter(t=>t.status==='vigor'),rascunhoFVS=tplsFVS.filter(t=>t.status==='rascunho');
   
   m.innerHTML=`
     <div class="page-header">
-      <div><div class="page-title">Templates FVS</div><div class="page-sub">${vigorFVS.length} em vigor · ${rascunhoFVS.length} em rascunho</div></div>
+      <div><div class="page-title">Templates FVS</div><div class="page-sub">${tplsFVS.length} template${tplsFVS.length!==1?'s':''}</div></div>
       ${pA?'<button class="btn btn-primary" onclick="abrirEditorTemplate()">+ Novo Template FVS</button>':''}
     </div>
     <div class="table-wrap"><div class="table-scroll"><table>
-      <thead><tr><th>Serviço</th><th>Norma</th><th>Critérios</th><th>Revisão</th><th>Status</th><th>Ações</th></tr></thead>
+      <thead><tr><th>Serviço</th><th>Norma</th><th>Critérios</th><th>Revisão</th><th>Tipo de serviço</th><th>Ações</th></tr></thead>
       <tbody>${tplsFVS.map(t=>`<tr>
         <td style="font-weight:500;color:var(--text)">${t.servico}</td>
         <td style="font-family:var(--font-mono);font-size:11px;color:var(--text3)">${t.norma||'—'}</td>
         <td style="color:var(--text)">${(t.criterios||[]).length}</td>
         <td><span class="tag tag-rev">${t.revisaoAtual}</span></td>
-        <td><span class="tag ${t.status==='vigor'?'tag-vigor':'tag-rascunho'}">${t.status==='vigor'?'EM VIGOR':'RASCUNHO'}</span></td>
+        <td style="font-size:11px;color:var(--text3)">${t.disciplina||'—'}</td>
         <td class="td-acoes"><div style="display:flex;gap:6px">
           ${pA?`<button class="btn btn-secondary btn-xs" onclick="abrirEditorTemplate('${t.id}')">Editar</button>`:''}
-          <button class="btn btn-ghost btn-xs" onclick="verHistorico('${t.id}')">Histórico</button>
-          ${pA&&t.status==='vigor'?`<button class="btn btn-ghost btn-xs" onclick="novaRevisao('${t.id}')">Nova revisão</button>`:''}
+          <button class="btn btn-ghost btn-xs" onclick="verHistorico('${t.id}')">Revisões</button>
         </div></td>
       </tr>`).join('')}
       ${!tplsFVS.length?`<tr><td colspan="6"><div class="empty"><div class="empty-icon">📋</div><div class="empty-title">Nenhum template FVS</div></div></td></tr>`:''}
@@ -2095,6 +2459,7 @@ function abrirEditorTemplate(id){
   document.getElementById('modal-tpl-title').textContent=id?'Editar template FVS':'Novo template FVS';
   document.getElementById('modal-tpl-sub').textContent=id?`${tpl.servico} · ${tpl.revisaoAtual}`:'';
   document.getElementById('tpl-servico').value=tpl?.servico||'';
+  document.getElementById('tpl-disciplina').value=tpl?.disciplina||'';
   document.getElementById('tpl-norma').value=tpl?.norma||'';
   document.getElementById('tpl-freq').value=tpl?.freq||'Por pavimento executado';
   document.getElementById('tpl-amostra').value=tpl?.amostra||'100% do serviço';
@@ -2136,47 +2501,153 @@ function dragStart(i){dragIdx=i;}
 function dragOver(e,i){e.preventDefault();document.getElementById('crit-card-'+i)?.classList.add('editando');}
 function dragLeave(i){document.getElementById('crit-card-'+i)?.classList.remove('editando');}
 function drop(e,i){e.preventDefault();document.getElementById('crit-card-'+i)?.classList.remove('editando');if(dragIdx===null||dragIdx===i)return;const item=criteriosTemp.splice(dragIdx,1)[0];criteriosTemp.splice(i,0,item);dragIdx=null;renderCriterios();}
-function salvarTemplate(statusNovo){
+function salvarTemplate(){
   const servico=document.getElementById('tpl-servico').value.trim();
+  const disciplina=document.getElementById('tpl-disciplina').value;
   if(!servico){toast('Nome do serviço é obrigatório','error');return;}
+  if(!disciplina){toast('Selecione o tipo de serviço','error');return;}
   if(!criteriosTemp.length){toast('Adicione ao menos um critério','error');return;}
   if(criteriosTemp.some(c=>!c.item.trim())){toast('Preencha o campo Item em todos os critérios','error');return;}
   const agora=new Date().toISOString();
-  const dados={servico,norma:document.getElementById('tpl-norma').value.trim(),freq:document.getElementById('tpl-freq').value,amostra:document.getElementById('tpl-amostra').value,criterios:criteriosTemp.map(c=>({...c,tipo:TIPO})),status:statusNovo};
+  const dados={servico,disciplina,norma:document.getElementById('tpl-norma').value.trim(),freq:document.getElementById('tpl-freq').value,amostra:document.getElementById('tpl-amostra').value,criterios:criteriosTemp.map(c=>({...c,tipo:TIPO})),status:'vigor'};
   if(tplEditId){
     const tplAtual=DB.getArr('templates').find(t=>t.id===tplEditId);
-    const nr=proxRev(tplAtual?.revisaoAtual,statusNovo);
-    DB.update('templates',tplEditId,{...dados,revisaoAtual:nr,historico:[...(tplAtual?.historico||[]),{rev:nr,data:agora,autor:usuarioAtual.id,descricao:statusNovo==='vigor'?'Publicado':'Rascunho salvo',status:statusNovo}]});
-    toast(statusNovo==='vigor'?'Template publicado':'Rascunho salvo','success');
+    const nr=proxRev(tplAtual?.revisaoAtual);
+    // Criar snapshot completo da versão ANTERIOR antes de atualizar
+    const snapshot={servico:tplAtual.servico,disciplina:tplAtual.disciplina,norma:tplAtual.norma,freq:tplAtual.freq,amostra:tplAtual.amostra,criterios:(tplAtual.criterios||[]).map(c=>({...c}))};
+    // Salvar no histórico a revisão ATUAL que está sendo substituída
+    DB.update('templates',tplEditId,{...dados,revisaoAtual:nr,historico:[...(tplAtual?.historico||[]),{rev:tplAtual.revisaoAtual,data:agora,autor:usuarioAtual.id,descricao:'Template atualizado',status:'vigor',snapshot}]});
+    toast('Template atualizado','success');
   } else {
-    const rev=statusNovo==='vigor'?'Rev. 01':'Rev. 00 — Rascunho';
-    DB.push('templates',{id:'t'+Date.now(),...dados,revisaoAtual:rev,historico:[{rev,data:agora,autor:usuarioAtual.id,descricao:statusNovo==='vigor'?'Publicado':'Rascunho criado',status:statusNovo}]});
-    toast(statusNovo==='vigor'?'Template publicado':'Rascunho criado','success');
+    const rev='Rev. 00';
+    // Para novo template, não salva histórico inicial - só começa a salvar histórico nas edições
+    DB.push('templates',{id:'t'+Date.now(),...dados,revisaoAtual:rev,status:'vigor',historico:[]});
+    toast('Template criado','success');
   }
   fecharModal('modal-template');renderTemplates(document.getElementById('main-content'));
 }
-function proxRev(atual,status){if(status==='rascunho'){const m=atual?.match(/Rev\. (\d+)/);return m?`Rev. ${m[1].padStart(2,'0')} — Rascunho`:'Rev. 00 — Rascunho';}const m=atual?.match(/Rev\. (\d+)/);return`Rev. ${String((m?parseInt(m[1]):0)+1).padStart(2,'0')}`;}
+function proxRev(atual){const m=atual?.match(/Rev\. (\d+)/);if(!m)return'Rev. 01';return`Rev. ${String(parseInt(m[1])+1).padStart(2,'0')}`;}
 function novaRevisao(id){
   const tpl=DB.getArr('templates').find(t=>t.id===id);if(!tpl)return;
   tplEditId=id;
   document.getElementById('modal-tpl-title').textContent='Nova revisão — '+tpl.servico;
   document.getElementById('modal-tpl-sub').textContent=`Atual: ${tpl.revisaoAtual} → ao publicar gerará nova revisão`;
-  document.getElementById('tpl-servico').value=tpl.servico;document.getElementById('tpl-norma').value=tpl.norma||'';
+  document.getElementById('tpl-servico').value=tpl.servico;document.getElementById('tpl-disciplina').value=tpl.disciplina||'';
+  document.getElementById('tpl-norma').value=tpl.norma||'';
   document.getElementById('tpl-freq').value=tpl.freq||'Por pavimento executado';document.getElementById('tpl-amostra').value=tpl.amostra||'100% do serviço';
   criteriosTemp=(tpl.criterios||[]).map(c=>({id:c.id||mkId('c'),item:c.item||'',metodo:c.metodo||'',tolerancia:c.tolerancia||'',tipo:TIPO}));
   renderCriterios();document.getElementById('modal-template').classList.add('open');
 }
 function verHistorico(id){
   const tpl=DB.getArr('templates').find(t=>t.id===id);if(!tpl)return;
-  document.getElementById('hist-titulo').textContent='Histórico — '+tpl.servico;
+  document.getElementById('hist-titulo').textContent='Revisões — '+tpl.servico;
   const hist=[...(tpl.historico||[])].reverse();
-  document.getElementById('hist-corpo').innerHTML=hist.map((h,i)=>`
-    <div class="hist-row">
-      <span class="hist-rev ${i===0?'atual':''}">${h.rev}</span>
-      <div class="hist-info"><div class="hist-data">${new Date(h.data).toLocaleDateString('pt-BR',{day:'2-digit',month:'2-digit',year:'numeric',hour:'2-digit',minute:'2-digit'})}</div><div class="hist-desc">${h.descricao}</div></div>
-      <span class="tag ${h.status==='vigor'?'tag-vigor':'tag-rascunho'}">${h.status==='vigor'?'EM VIGOR':'RASCUNHO'}</span>
-    </div>`).join('');
+  
+  // Se não há histórico (template novo), mostrar apenas a versão atual
+  if(!hist.length){
+    document.getElementById('hist-corpo').innerHTML=`
+      <div class="hist-row">
+        <span class="hist-rev atual">${tpl.revisaoAtual}</span>
+        <div class="hist-info"><div class="hist-data">${new Date().toLocaleDateString('pt-BR',{day:'2-digit',month:'2-digit',year:'numeric',hour:'2-digit',minute:'2-digit'})}</div><div class="hist-desc">Versão atual</div></div>
+        <div style="display:flex;gap:6px;align-items:center">
+          <span class="tag tag-vigor">EM VIGOR</span>
+          <button class="btn btn-ghost btn-xs" onclick="verVersaoTemplateAtual('${tpl.id}')">Ver versão</button>
+        </div>
+      </div>`;
+  } else {
+    // Se há histórico, mostrar versão atual + histórico
+    document.getElementById('hist-corpo').innerHTML=`
+      <div class="hist-row">
+        <span class="hist-rev atual">${tpl.revisaoAtual}</span>
+        <div class="hist-info"><div class="hist-data">${new Date().toLocaleDateString('pt-BR',{day:'2-digit',month:'2-digit',year:'numeric',hour:'2-digit',minute:'2-digit'})}</div><div class="hist-desc">Versão atual</div></div>
+        <div style="display:flex;gap:6px;align-items:center">
+          <span class="tag tag-vigor">EM VIGOR</span>
+          <button class="btn btn-ghost btn-xs" onclick="verVersaoTemplateAtual('${tpl.id}')">Ver versão</button>
+        </div>
+      </div>
+      ${hist.map((h,i)=>`
+        <div class="hist-row">
+          <span class="hist-rev">${h.rev}</span>
+          <div class="hist-info"><div class="hist-data">${new Date(h.data).toLocaleDateString('pt-BR',{day:'2-digit',month:'2-digit',year:'numeric',hour:'2-digit',minute:'2-digit'})}</div><div class="hist-desc">${h.descricao}</div></div>
+          <div style="display:flex;gap:6px;align-items:center">
+            <span class="tag tag-rascunho">HISTÓRICO</span>
+            ${h.snapshot?`<button class="btn btn-ghost btn-xs" onclick="verVersaoTemplate('${tpl.id}',${(tpl.historico||[]).length-1-i})">Ver versão</button>`:''}
+          </div>
+        </div>
+      `).join('')}
+    `;
+  }
   document.getElementById('modal-historico').classList.add('open');
+}
+
+function verVersaoTemplateAtual(templateId){
+  const tpl=DB.getArr('templates').find(t=>t.id===templateId);if(!tpl)return;
+  fecharModal('modal-historico');
+  const m=document.getElementById('main-content');
+  m.innerHTML=`
+    <div style="margin-bottom:14px"><button class="btn btn-ghost btn-sm" onclick="verHistorico('${tpl.id}')">← Voltar para revisões</button></div>
+    <div class="page-header">
+      <div><div class="page-title">Versão ${tpl.revisaoAtual}</div><div class="page-sub">${esc(tpl.servico)} · versão atual</div></div>
+      <button class="btn btn-secondary" onclick="renderTemplates(document.getElementById('main-content'))">Fechar</button>
+    </div>
+    <div class="table-wrap" style="padding:16px">
+      <div class="meta-grid">
+        <div class="field"><label>Serviço</label><input value="${esc(tpl.servico||'')}" disabled></div>
+        <div class="field"><label>Tipo de serviço</label><input value="${esc(tpl.disciplina||'')}" disabled></div>
+      </div>
+      <div class="meta-grid">
+        <div class="field"><label>Norma de referência</label><input value="${esc(tpl.norma||'')}" disabled></div>
+        <div class="field"><label>Frequência de aplicação</label><input value="${esc(tpl.freq||'')}" disabled></div>
+      </div>
+      <div class="meta-grid">
+        <div class="field"><label>Plano de amostragem</label><input value="${esc(tpl.amostra||'')}" disabled></div>
+      </div>
+      <div class="divider"></div>
+      <div style="font-size:13px;font-weight:600;margin-bottom:10px">Critérios desta versão</div>
+      ${(tpl.criterios||[]).length?(tpl.criterios||[]).map((c,i)=>`<div style="background:var(--bg3);border:1px solid var(--border);border-radius:var(--radius);padding:12px 14px;margin-bottom:10px">
+        <div style="font-size:13px;font-weight:600;margin-bottom:6px">${i+1}. ${esc(c.item||'')}</div>
+        <div style="font-size:12px;color:var(--text3);margin-bottom:4px">Método: ${esc(c.metodo||'—')}</div>
+        <div style="font-size:12px;color:var(--text3);margin-bottom:4px">Tolerância: ${esc(c.tolerancia||'—')}</div>
+        <div style="font-size:12px;color:var(--text3)">Tipo: C / NC / RC / NA</div>
+      </div>`).join(''):`<div class="empty"><div class="empty-title">Sem critérios nesta versão</div></div>`}
+    </div>
+  `;
+}
+
+function verVersaoTemplate(templateId,histIndex){
+  const tpl=DB.getArr('templates').find(t=>t.id===templateId);if(!tpl)return;
+  const h=(tpl.historico||[])[histIndex];if(!h?.snapshot)return;
+  fecharModal('modal-historico');
+  const s=h.snapshot;
+  const m=document.getElementById('main-content');
+  m.innerHTML=`
+    <div style="margin-bottom:14px"><button class="btn btn-ghost btn-sm" onclick="verHistorico('${tpl.id}')">← Voltar para revisões</button></div>
+    <div class="page-header">
+      <div><div class="page-title">Versão ${h.rev}</div><div class="page-sub">${esc(tpl.servico)} · visualização histórica</div></div>
+      <button class="btn btn-secondary" onclick="renderTemplates(document.getElementById('main-content'))">Fechar</button>
+    </div>
+    <div class="table-wrap" style="padding:16px">
+      <div class="meta-grid">
+        <div class="field"><label>Serviço</label><input value="${esc(s.servico||'')}" disabled></div>
+        <div class="field"><label>Tipo de serviço</label><input value="${esc(s.disciplina||'')}" disabled></div>
+      </div>
+      <div class="meta-grid">
+        <div class="field"><label>Norma de referência</label><input value="${esc(s.norma||'')}" disabled></div>
+        <div class="field"><label>Frequência de aplicação</label><input value="${esc(s.freq||'')}" disabled></div>
+      </div>
+      <div class="meta-grid">
+        <div class="field"><label>Plano de amostragem</label><input value="${esc(s.amostra||'')}" disabled></div>
+      </div>
+      <div class="divider"></div>
+      <div style="font-size:13px;font-weight:600;margin-bottom:10px">Critérios desta versão</div>
+      ${(s.criterios||[]).length?(s.criterios||[]).map((c,i)=>`<div style="background:var(--bg3);border:1px solid var(--border);border-radius:var(--radius);padding:12px 14px;margin-bottom:10px">
+        <div style="font-size:13px;font-weight:600;margin-bottom:6px">${i+1}. ${esc(c.item||'')}</div>
+        <div style="font-size:12px;color:var(--text3);margin-bottom:4px">Método: ${esc(c.metodo||'—')}</div>
+        <div style="font-size:12px;color:var(--text3);margin-bottom:4px">Tolerância: ${esc(c.tolerancia||'—')}</div>
+        <div style="font-size:12px;color:var(--text3)">Tipo: C / NC / RC / NA</div>
+      </div>`).join(''):`<div class="empty"><div class="empty-title">Sem critérios nesta versão</div></div>`}
+    </div>
+  `;
 }
 
 
@@ -2552,6 +3023,447 @@ function adicionarLocalFVS(valor=''){
 
   wrap.appendChild(div);
 }
+
+// ── CONSULTA E AUTOPREENCHIMENTO DE CNPJ/CPF ─────────────────────
+let consultaTimeout=null;
+
+function consultarDocumento(valor){
+  clearTimeout(consultaTimeout);
+  
+  const tipo=document.getElementById('fornecedor-tipo').value;
+  const loading=document.getElementById('fornecedor-loading');
+  const nomeInput=document.getElementById('fornecedor-nome');
+  
+  // Só consultar CNPJ por enquanto
+  if(tipo!=='cnpj')return;
+  
+  // Limpar nome se o campo foi limpo
+  if(!valor.trim()){
+    nomeInput.value='';
+    return;
+  }
+  
+  // Verificar se CNPJ está completo (14 dígitos)
+  const cnpjLimpo=valor.replace(/\D/g,'');
+  if(cnpjLimpo.length!==14)return;
+  
+  // Verificar se CNPJ é válido antes de consultar
+  if(!validarCNPJ(valor)){
+    toast('CNPJ inválido','error');
+    return;
+  }
+  
+  consultaTimeout=setTimeout(async()=>{
+    try{
+      loading.style.display='flex';
+      nomeInput.placeholder='Consultando...';
+      nomeInput.disabled=true;
+      
+      // Usar API pública da Receita Federal
+      const response=await fetch(`https://publica.cnpj.ws/cnpj/${cnpjLimpo}`);
+      
+      if(!response.ok){
+        throw new Error('CNPJ não encontrado');
+      }
+      
+      const data=await response.json();
+      
+      if(data.erro){
+        throw new Error('CNPJ inválido ou não encontrado');
+      }
+      
+      // Autopreencher o nome com nome fantasia ou razão social
+      let nomeEmpresa=data.estabelecimento?.nome_fantasia || data.razao_social || '';
+      
+      if(nomeEmpresa){
+        nomeInput.value=nomeEmpresa.trim();
+        toast('Dados do CNPJ encontrados!','success');
+      }else{
+        throw new Error('Nome não encontrado na resposta');
+      }
+      
+    }catch(error){
+      console.error('Erro na consulta CNPJ:', error);
+      toast('Não foi possível consultar este CNPJ','error');
+      nomeInput.placeholder='Nome do fornecedor';
+    }finally{
+      loading.style.display='none';
+      nomeInput.disabled=false;
+    }
+  },800); // Debounce de 800ms
+}
+
+// ── VALIDAÇÃO CPF/CNPJ ───────────────────────────────────────
+function atualizarMascaraDocumento(){
+  const tipo=document.getElementById('fornecedor-tipo');
+  const input=document.getElementById('fornecedor-documento');
+  const label=document.getElementById('label-documento');
+  
+  if(!tipo || !input || !label)return;
+  
+  const tipoValue=tipo.value;
+  
+  if(tipoValue==='cpf'){
+    label.textContent='CPF *';
+    input.placeholder='000.000.000-00';
+    input.maxLength=14;
+  }else{
+    label.textContent='CNPJ *';
+    input.placeholder='00.000.000/0000-00';
+    input.maxLength=18;
+  }
+}
+
+function validarCPF(cpf){
+  // Remove caracteres não numéricos
+  cpf=cpf.replace(/\D/g,'');
+  
+  // Verifica se tem 11 dígitos
+  if(cpf.length!==11)return false;
+  
+  // Verifica se todos os dígitos são iguais
+  if(/^(\d)\1{10}$/.test(cpf))return false;
+  
+  // Validação do CPF
+  let soma=0;
+  let resto;
+  
+  // Valida primeiro dígito verificador
+  for(let i=1;i<=9;i++)soma+=parseInt(cpf.substring(i-1,i))*(11-i);
+  resto=(soma*10)%11;
+  if(resto===10||resto===11)resto=0;
+  if(resto!==parseInt(cpf.substring(9,10)))return false;
+  
+  // Valida segundo dígito verificador
+  soma=0;
+  for(let i=1;i<=10;i++)soma+=parseInt(cpf.substring(i-1,i))*(12-i);
+  resto=(soma*10)%11;
+  if(resto===10||resto===11)resto=0;
+  if(resto!==parseInt(cpf.substring(10,11)))return false;
+  
+  return true;
+}
+
+function validarCNPJ(cnpj){
+  // Remove caracteres não numéricos
+  cnpj=cnpj.replace(/\D/g,'');
+  
+  // Verifica se tem 14 dígitos
+  if(cnpj.length!==14)return false;
+  
+  // Verifica se todos os dígitos são iguais
+  if(/^(\d)\1{13}$/.test(cnpj))return false;
+  
+  // Validação do CNPJ
+  let tamanho=14-2;
+  let numeros=cnpj.substring(0,tamanho);
+  let digitos=cnpj.substring(tamanho);
+  let soma=0;
+  let pos=tamanho-7;
+  
+  for(let i=tamanho;i>=1;i--){
+    soma+=numeros.charAt(tamanho-i)*pos--;
+    if(pos<2)pos=9;
+  }
+  
+  let resultado=soma%11<2?0:11-soma%11;
+  if(resultado!==parseInt(digitos.charAt(0)))return false;
+  
+  tamanho++;
+  numeros=cnpj.substring(0,tamanho);
+  soma=0;
+  pos=tamanho-7;
+  
+  for(let i=tamanho;i>=1;i--){
+    soma+=numeros.charAt(tamanho-i)*pos--;
+    if(pos<2)pos=9;
+  }
+  
+  resultado=soma%11<2?0:11-soma%11;
+  if(resultado!==parseInt(digitos.charAt(1)))return false;
+  
+  return true;
+}
+
+function formatarDocumento(doc,tipo){
+  doc=doc.replace(/\D/g,'');
+  
+  if(tipo==='cpf' && doc.length===11){
+    return doc.replace(/(\d{3})(\d{3})(\d{3})(\d{2})/,'$1.$2.$3-$4');
+  }else if(tipo==='cnpj' && doc.length===14){
+    return doc.replace(/(\d{2})(\d{3})(\d{3})(\d{4})(\d{2})/,'$1.$2.$3/$4-$5');
+  }
+  
+  return doc;
+}
+
+// ── FORNECEDORES ───────────────────────────────────────────
+function renderFornecedores(m){
+  try {
+    const fornecedores=DB.getArr('fornecedores');
+    const ativos=fornecedores.filter(f=>f.status==='ativo');
+    const inativos=fornecedores.filter(f=>f.status==='inativo');
+    
+    let rowsHTML = '';
+    if(fornecedores.length > 0) {
+      rowsHTML = fornecedores.map(f=>`
+        <tr>
+          <td style="font-weight:600;color:var(--text)">${esc(f.nome)}</td>
+          <td style="font-family:var(--font-mono);font-size:12px;color:var(--text2)">${formatarDocumento(f.documento,f.tipoDocumento||'cnpj')}</td>
+          <td><span class="tag tag-rev">${(f.tipoDocumento||'cnpj').toUpperCase()}</span></td>
+          <td><span class="tag ${f.status==='ativo'?'tag-ativa':'tag-enc'}">${f.status.toUpperCase()}</span></td>
+          <td class="td-acoes"><div style="display:flex;gap:6px">
+            <button class="btn btn-secondary btn-xs" onclick="abrirModalFornecedor('${f.id}')">Editar</button>
+            <button class="btn btn-ghost btn-xs" onclick="toggleStatusFornecedor('${f.id}')">${f.status==='ativo'?'Inativar':'Ativar'}</button>
+          </div></td>
+        </tr>`).join('');
+    }
+    
+    m.innerHTML=`
+      <div class="page-header">
+        <div><div class="page-title">Fornecedores</div><div class="page-sub">${ativos.length} ativo${ativos.length!==1?'s':''} · ${inativos.length} inativo${inativos.length!==1?'s':''}</div></div>
+        <button class="btn btn-primary" onclick="abrirModalFornecedor()">+ Novo fornecedor</button>
+      </div>
+      <div class="table-wrap"><div class="table-scroll"><table>
+        <thead><tr><th>Nome</th><th>Documento</th><th>Tipo</th><th>Status</th><th>Ações</th></tr></thead>
+        <tbody>${rowsHTML}
+        </tbody></table></div></div>
+      ${!fornecedores.length?'<div class="empty"><div class="empty-icon">🏢</div><div class="empty-title">Nenhum fornecedor cadastrado</div><div class="empty-desc">Clique em "+ Novo fornecedor" para começar</div></div>':''}`;
+  } catch(error) {
+    console.error('Erro em renderFornecedores:', error);
+    m.innerHTML = '<div class="page-header"><div class="page-title">Fornecedores</div></div><div class="empty"><div class="empty-title">Erro ao carregar fornecedores</div><div class="empty-desc">' + esc(error.message) + '</div></div>';
+  }
+}
+
+let fornecedorEditandoId=null;
+function abrirModalFornecedor(id){
+  fornecedorEditandoId=id||null;
+  const fornecedor=id?DB.getArr('fornecedores').find(f=>f.id===id):null;
+  
+  // Limpar timeout de consulta
+  clearTimeout(consultaTimeout);
+  
+  document.getElementById('modal-fornecedor-title').textContent=id?'Editar fornecedor':'Novo fornecedor';
+  document.getElementById('fornecedor-nome').value=fornecedor?.nome||'';
+  document.getElementById('fornecedor-nome').placeholder='Nome do fornecedor';
+  document.getElementById('fornecedor-nome').disabled=false;
+  document.getElementById('fornecedor-tipo').value=fornecedor?.tipoDocumento||'cnpj';
+  document.getElementById('fornecedor-documento').value=fornecedor?.documento||'';
+  
+  // Esconder loading
+  document.getElementById('fornecedor-loading').style.display='none';
+  
+  atualizarMascaraDocumento();
+  document.getElementById('modal-fornecedor').classList.add('open');
+}
+
+function salvarFornecedor(){
+  const nome=document.getElementById('fornecedor-nome').value.trim();
+  const tipo=document.getElementById('fornecedor-tipo').value;
+  const documento=document.getElementById('fornecedor-documento').value.trim();
+  
+  if(!nome){toast('Nome do fornecedor é obrigatório','error');return;}
+  if(!documento){toast('Documento é obrigatório','error');return;}
+  
+  // Validar documento conforme o tipo
+  let documentoValido=false;
+  if(tipo==='cpf'){
+    documentoValido=validarCPF(documento);
+    if(!documentoValido){toast('CPF inválido','error');return;}
+  }else{
+    documentoValido=validarCNPJ(documento);
+    if(!documentoValido){toast('CNPJ inválido','error');return;}
+  }
+  
+  const dados={nome,documento,tipoDocumento:tipo,status:'ativo'};
+  
+  if(fornecedorEditandoId){
+    DB.update('fornecedores',fornecedorEditandoId,dados);
+    toast('Fornecedor atualizado','success');
+  }else{
+    // Verificar se documento já existe
+    const existeDocumento=DB.getArr('fornecedores').some(f=>f.documento===documento.replace(/\D/g,''));
+    if(existeDocumento){toast(`Já existe um fornecedor com este ${tipo.toUpperCase()}`,'error');return;}
+    
+    DB.push('fornecedores',{id:'f'+Date.now(),...dados,criado:new Date().toISOString()});
+    toast('Fornecedor cadastrado','success');
+  }
+  fecharModal('modal-fornecedor');
+  renderFornecedores(document.getElementById('main-content'));
+}
+
+function toggleStatusFornecedor(id){
+  const fornecedor=DB.getArr('fornecedores').find(f=>f.id===id);
+  if(!fornecedor)return;
+  
+  const novoStatus=fornecedor.status==='ativo'?'inativo':'ativo';
+  DB.update('fornecedores',id,{status:novoStatus});
+  
+  toast(`Fornecedor ${novoStatus==='ativo'?'ativado':'inativado'} com sucesso`,'success');
+  renderFornecedores(document.getElementById('main-content'));
+}
+
+// ── BUSCA INTELIGENTE DE FORNECEDORES NA FVM ───────────────────────
+let fornecedorTimeout=null;
+let fornecedoresCache=null;
+
+function getFornecedoresCache(){
+  if(!fornecedoresCache){
+    fornecedoresCache=DB.getArr('fornecedores').filter(f=>f.status==='ativo');
+  }
+  return fornecedoresCache;
+}
+
+function buscarFornecedores(fvmId,termo){
+  clearTimeout(fornecedorTimeout);
+  fornecedorTimeout=setTimeout(()=>{
+    const lista=document.getElementById(`fornecedor-lista-${fvmId}`);
+    if(!lista)return;
+    
+    const fornecedores=getFornecedoresCache();
+    const termoLimpo=termo.toLowerCase().trim();
+    
+    let resultados=fornecedores;
+    
+    if(termoLimpo){
+      resultados=fornecedores.filter(f=>{
+        const nome=f.nome.toLowerCase();
+        const doc=f.documento.replace(/\D/g,'');
+        const docBusca=termoLimpo.replace(/\D/g,'');
+        
+        return nome.includes(termoLimpo) || 
+               doc.includes(docBusca) ||
+               f.tipoDocumento.toLowerCase().includes(termoLimpo);
+      });
+    }
+    
+    // Limitar a 20 resultados para performance
+    resultados=resultados.slice(0,20);
+    
+    if(resultados.length===0){
+      lista.innerHTML='<div class="fornecedor-item" style="color:var(--text3);font-size:12px;padding:12px">Nenhum fornecedor encontrado</div>';
+    }else{
+      lista.innerHTML=resultados.map(f=>`
+        <div class="fornecedor-item" onclick="selecionarFornecedor('${fvmId}','${f.id}','${esc(f.nome)}')">
+          <div class="fornecedor-info">
+            <div class="fornecedor-nome">${esc(f.nome)}</div>
+            <div class="fornecedor-doc">${formatarDocumento(f.documento,f.tipoDocumento)}</div>
+          </div>
+          <span class="tag tag-rev">${f.tipoDocumento.toUpperCase()}</span>
+        </div>
+      `).join('');
+    }
+    
+    lista.style.display='block';
+  },300);
+}
+
+function mostrarListaFornecedores(fvmId){
+  const lista=document.getElementById(`fornecedor-lista-${fvmId}`);
+  const input=document.getElementById(`fornecedor-busca-${fvmId}`);
+  
+  if(input.value.trim()){
+    buscarFornecedores(fvmId,input.value);
+  }else{
+    // Mostrar fornecedores recentes ou populares
+    const fornecedores=getFornecedoresCache();
+    const recentes=fornecedores.slice(0,8); // Últimos 8 cadastrados
+    
+    lista.innerHTML=recentes.map(f=>`
+      <div class="fornecedor-item" onclick="selecionarFornecedor('${fvmId}','${f.id}','${esc(f.nome)}')">
+        <div class="fornecedor-info">
+          <div class="fornecedor-nome">${esc(f.nome)}</div>
+          <div class="fornecedor-doc">${formatarDocumento(f.documento,f.tipoDocumento)}</div>
+        </div>
+        <span class="tag tag-rev">${f.tipoDocumento.toUpperCase()}</span>
+      </div>
+    `).join('');
+    
+    lista.style.display='block';
+  }
+}
+
+function ocultarListaFornecedores(fvmId){
+  setTimeout(()=>{
+    const lista=document.getElementById(`fornecedor-lista-${fvmId}`);
+    if(lista)lista.style.display='none';
+  },200);
+}
+
+function selecionarFornecedor(fvmId,fornecedorId,fornecedorNome){
+  const inputBusca=document.getElementById(`fornecedor-busca-${fvmId}`);
+  const inputId=document.getElementById(`fornecedor-id-${fvmId}`);
+  const lista=document.getElementById(`fornecedor-lista-${fvmId}`);
+  
+  inputBusca.value=fornecedorNome;
+  inputId.value=fornecedorId;
+  
+  // Atualizar dados da FVM
+  atualizarDadosFVM(fvmId,'fornecedorId',fornecedorId);
+  atualizarDadosFVM(fvmId,'fornecedorNome',fornecedorNome);
+  
+  // Obter dados completos do fornecedor
+  const fornecedor=getFornecedoresCache().find(f=>f.id===fornecedorId);
+  if(fornecedor){
+    atualizarDadosFVM(fvmId,'fornecedorDocumento',fornecedor.documento);
+    atualizarDadosFVM(fvmId,'fornecedorTipo',fornecedor.tipoDocumento);
+  }
+  
+  lista.style.display='none';
+  
+  toast(`Fornecedor selecionado: ${fornecedorNome}`,'success');
+}
+
+// Limpar cache quando fornecedores são atualizados
+function limparCacheFornecedores(){
+  fornecedoresCache=null;
+}
+
+// Sobrescrever funções de fornecedor para limpar cache
+const originalSalvarFornecedor=salvarFornecedor;
+const originalToggleStatusFornecedor=toggleStatusFornecedor;
+
+salvarFornecedor=function(){
+  const resultado=originalSalvarFornecedor.apply(this,arguments);
+  limparCacheFornecedores();
+  return resultado;
+};
+
+toggleStatusFornecedor=function(){
+  const resultado=originalToggleStatusFornecedor.apply(this,arguments);
+  limparCacheFornecedores();
+  return resultado;
+};
+
+function migrarFVMExistentes(){
+  const fvmList=DB.getArr('fvm');
+  const templates=getTemplatesFVM();
+  let migrados=0;
+  
+  fvmList.forEach(fvm => {
+    // Se já tem critérios salvos, não precisa migrar
+    if(fvm.criterios && fvm.criterios.length > 0) return;
+    
+    const tpl=templates.find(t=>t.id===fvm.templateId);
+    if(tpl && tpl.criterios){
+      // Salvar cópia dos critérios do template
+      const criteriosSalvos=tpl.criterios.map(c=>({...c}));
+      DB.update('fvm', fvm.id, {criterios: criteriosSalvos});
+      migrados++;
+    }
+  });
+  
+  if(migrados > 0){
+    console.log(`Migrados ${migrados} FVM para usar critérios salvos`);
+  }
+}
+
+// Migrar FVS existentes para usar critérios salvos
+migrarFVSExistentes();
+
+// Migrar FVM existentes para usar critérios salvos
+migrarFVMExistentes();
+
 </script>
 </body>
 </html>
