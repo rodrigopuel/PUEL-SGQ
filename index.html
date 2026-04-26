@@ -400,6 +400,9 @@ tr:hover td{background:var(--bg3);color:var(--text)}
       <div class="nav-item" onclick="navegar('fvs')" id="nav-fvs">
         <svg class="nav-icon" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M9 1H3a1 1 0 00-1 1v12a1 1 0 001 1h10a1 1 0 001-1V6L9 1z"/><path d="M9 1v5h5"/><path d="M5 9h6M5 12h4"/></svg>FVS
       </div>
+      <div class="nav-item" onclick="navegar('fvm')" id="nav-fvm">
+        <svg class="nav-icon" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5"><rect x="2" y="2" width="12" height="12" rx="2"/><path d="M5 6h6M5 9h6M5 12h4"/></svg>FVM
+      </div>
             <div class="sidebar-section">RELATÓRIOS</div>
       <div class="nav-item" onclick="navegar('dossie')" id="nav-dossie">
         <svg class="nav-icon" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M2 3h12v10a1 1 0 01-1 1H3a1 1 0 01-1-1V3z"/><path d="M5 3V1M11 3V1M2 7h12M5 10h6M5 13h3"/></svg>Dossiê / PDF
@@ -561,6 +564,24 @@ tr:hover td{background:var(--bg3);color:var(--text)}
   </div>
 </div>
 
+<!-- MODAL SELECIONAR TEMPLATE FVM -->
+<div class="modal-overlay" id="modal-selecionar-template-fvm">
+  <div class="modal">
+    <div class="modal-header">
+      <div><div class="modal-title">Selecionar Template FVM</div><div style="font-size:11px;color:var(--text3);margin-top:2px">Escolha um modelo para iniciar a verificação</div></div>
+      <button class="modal-close" onclick="fecharModal('modal-selecionar-template-fvm')">×</button>
+    </div>
+    <div class="modal-body">
+      <div class="field"><label>Obra</label><input type="text" id="fvm-obra-selecionada" readonly style="background:var(--bg3);color:var(--text2)"></div>
+      <div class="divider"></div>
+      <div id="fvm-templates-list"></div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-secondary btn-sm" onclick="fecharModal('modal-selecionar-template-fvm')">Cancelar</button>
+    </div>
+  </div>
+</div>
+
 <!-- MODAL FOTO RC -->
 <div class="modal-overlay" id="modal-rc-foto">
   <div class="modal" style="max-width:440px">
@@ -626,12 +647,12 @@ function mkCrit(item,metodo,tolerancia){return{id:mkId('c'),item:item||'',metodo
 function esc(s){return(s||'').replace(/&/g,'&amp;').replace(/"/g,'&quot;').replace(/'/g,'&#39;').replace(/</g,'&lt;').replace(/>/g,'&gt;');}
 
 function seedDados(){
-  const versao='v13';
+  const versao='v14';
   if(DB.get('seed_versao')===versao)return;
   const agora=new Date().toISOString();
   const d=dias=>new Date(Date.now()-dias*86400000).toISOString();
   DB.set('usuarios',[
-    {id:'u1',nome:'Rodrigo Puel',email:'diretor@puel.com.br',perfil:'admin',ativo:true,senha:'123'},
+    {id:'u1',nome:'Rodrigo Puel',email:'diretor@puel.com.br',perfil:'admin',ativo:true,senha:'123456'},
     {id:'u2',nome:'Carlos Mendes',email:'engenheiro@puel.com.br',senha:'123456',perfil:'engenheiro',ativo:true},
     {id:'u3',nome:'Lucas Técnico',email:'tecnico@puel.com.br',senha:'123456',perfil:'tecnico',ativo:true}
   ]);
@@ -738,7 +759,7 @@ function iniciarApp(){
 }
 function mostrarTela(id){document.querySelectorAll('.screen').forEach(s=>s.classList.remove('active'));document.getElementById(id).classList.add('active');}
 
-const SECOES={dashboard:'Dashboard',alertas:'Alertas',obras:'Obras',fvs:'FVS',templates:'Templates FVS','templates-fvm':'Template FVM',dossie:'Dossiê / PDF',usuarios:'Usuários'};
+const SECOES={dashboard:'Dashboard',alertas:'Alertas',obras:'Obras',fvs:'FVS',fvm:'FVM',templates:'Templates FVS','templates-fvm':'Template FVM',dossie:'Dossiê / PDF',usuarios:'Usuários'};
 function navegar(s){
   document.querySelectorAll('.nav-item').forEach(n=>n.classList.remove('active'));
   const nav=document.getElementById('nav-'+s);if(nav)nav.classList.add('active');
@@ -756,7 +777,7 @@ function navegar(s){
   
   document.getElementById('topbar-section').textContent=SECOES[s]||s;
   const m=document.getElementById('main-content');
-  ({dashboard:renderDashboard,alertas:renderAlertas,obras:renderObras,fvs:renderFVS,templates:renderTemplates,'templates-fvm':renderTemplatesFVM,dossie:renderDossie,usuarios:renderUsuarios}[s]||function(){})(m);
+  ({dashboard:renderDashboard,alertas:renderAlertas,obras:renderObras,fvs:renderFVS,fvm:renderFVM,templates:renderTemplates,'templates-fvm':renderTemplatesFVM,dossie:renderDossie,usuarios:renderUsuarios}[s]||function(){})(m);
 }
 
 function calcStats(fvs){
@@ -1383,6 +1404,310 @@ function confirmarEncerramento(){
   fecharModal('modal-encerrar');toast('FVS encerrada e arquivada','success');verFVS(fvsAtualId);
 }
 
+// ── FVM ────────────────────────────────────────────────
+function renderFVM(m){
+  const obraSelecionada=getObraAtivaSelecionada();
+  const fvmList=DB.getArr('fvm').filter(f=>!obraSelecionada || f.obraId===obraSelecionada.id);
+  const emAndamento=fvmList.filter(f=>f.status==='andamento');
+  const encerradas=fvmList.filter(f=>f.status==='encerrada');
+  
+  m.innerHTML=`
+    <div class="page-header">
+      <div><div class="page-title">FVM</div><div class="page-sub">${emAndamento.length} em andamento · ${encerradas.length} encerrada${encerradas.length!==1?'s':''}${obraSelecionada?` · ${obraSelecionada.nome}`:''}</div></div>
+      <button class="btn btn-primary" onclick="abrirNovaFVM()">+ Nova FVM</button>
+    </div>
+    <div class="kpi-grid">
+      <div class="kpi-card k-amber"><div class="kpi-label">Em andamento</div><div class="kpi-value" style="color:var(--amber)">${emAndamento.length}</div></div>
+      <div class="kpi-card k-green"><div class="kpi-label">Encerradas</div><div class="kpi-value" style="color:var(--green)">${encerradas.length}</div></div>
+      <div class="kpi-card"><div class="kpi-label">Total</div><div class="kpi-value">${fvmList.length}</div></div>
+    </div>
+    ${emAndamento.length?`<div style="font-size:11px;font-family:var(--font-mono);color:var(--text3);letter-spacing:1px;text-transform:uppercase;margin-bottom:10px">Em andamento</div>${emAndamento.map(cardFVMMin).join('')}`:''}
+    ${encerradas.length?`<div style="font-size:11px;font-family:var(--font-mono);color:var(--text3);letter-spacing:1px;text-transform:uppercase;margin:16px 0 10px">Encerradas</div>${encerradas.map(cardFVMMin).join('')}`:''}
+    ${!fvmList.length?`<div class="empty"><div class="empty-icon">📋</div><div class="empty-title">${obraSelecionada?'Nenhuma FVM para a obra selecionada':'Nenhuma FVM cadastrada'}</div><div class="empty-desc">Clique em "+ Nova FVM" para começar</div></div>`:''}`;
+}
+
+function cardFVMMin(fvm){
+  const obra=DB.getArr('obras').find(o=>o.id===fvm.obraId);
+  const tpl=DB.getArr('templates_fvm').find(t=>t.id===fvm.templateId);
+  const status=fvm.status==='encerrada'?'var(--green)':'var(--amber)';
+  
+  return`<div class="fvs-card" onclick="verFVM('${fvm.id}')">
+    <div style="display:flex;align-items:flex-start;justify-content:space-between;gap:10px;margin-bottom:8px">
+      <div>
+        <div style="font-size:11px;color:var(--text3);font-family:var(--font-mono);margin-bottom:3px">${fvm.cod}</div>
+        <div style="font-family:var(--font-cond);font-size:15px;font-weight:600">${fvm.servico}</div>
+        <div style="font-size:11px;color:var(--text3);margin-top:2px">${obra?.nome||'—'}</div>
+      </div>
+      <div style="display:flex;flex-direction:column;align-items:flex-end;gap:5px">
+        <span class="tag ${fvm.status==='andamento'?'tag-and':'tag-ok'}" style="font-size:12px;padding:5px 12px">${fvm.status==='andamento'?'EM ANDAMENTO':'ENCERRADA'}</span>
+        <div style="font-size:11px;color:var(--text3);font-family:var(--font-mono)">${tpl?.revisao||'Rev. 00'}</div>
+      </div>
+    </div>
+  </div>`;
+}
+
+function abrirNovaFVM(){
+  const obraSelecionada=getObraAtivaSelecionada();
+  if(!obraSelecionada){
+    toast('Selecione uma obra no menu lateral','error');
+    return;
+  }
+  
+  // Preenche o campo da obra
+  document.getElementById('fvm-obra-selecionada').value=obraSelecionada.nome;
+  
+  // Lista os templates disponíveis
+  const templates=getTemplatesFVM();
+  const templatesList=document.getElementById('fvm-templates-list');
+  
+  if(!templates.length){
+    templatesList.innerHTML=`<div class="empty"><div class="empty-title">Nenhum template FVM cadastrado</div><div class="empty-desc">Cadastre um template primeiro em "Template FVM" no menu Configurações</div></div>`;
+    return;
+  }
+  
+  templatesList.innerHTML=templates.map(tpl=>`
+    <div class="fvs-check-item" onclick="selecionarTemplateFVMParaNova('${tpl.id}')" style="cursor:pointer">
+      <div style="flex:1">
+        <div style="font-size:13px;font-weight:500;color:var(--text)">${tpl.nome}</div>
+        <div style="font-size:11px;color:var(--text3);font-family:var(--font-mono)">${tpl.revisao} · ${tpl.criterios.length} critérios</div>
+      </div>
+      <button class="btn btn-primary btn-xs">Usar este template</button>
+    </div>
+  `).join('');
+  
+  document.getElementById('modal-selecionar-template-fvm').classList.add('open');
+}
+
+function selecionarTemplateFVMParaNova(templateId){
+  const obraSelecionada=getObraAtivaSelecionada();
+  const tpl=getTemplatesFVM().find(t=>t.id===templateId);
+  if(!tpl || !obraSelecionada){
+    toast('Template ou obra não encontrada','error');
+    return;
+  }
+  
+  // Criar nova FVM
+  const agora=new Date().toISOString();
+  const num=String(DB.getArr('fvm').length+1).padStart(3,'0');
+  const novaFVM={
+    id:'fvm'+Date.now(),
+    cod:`FVM-${new Date().getFullYear()}-${num}`,
+    obraId:obraSelecionada.id,
+    templateId:templateId,
+    servico:tpl.nome,
+    inspetorId:usuarioAtual.id,
+    status:'andamento',
+    abertura:agora,
+    fechamento:null,
+    dados:{
+      registroCompra:'',
+      dataRecebimento:'',
+      fornecedor:'',
+      resultados:{}
+    },
+    notaFinal:null,
+    resultado:null
+  };
+  
+  DB.push('fvm',novaFVM);
+  fecharModal('modal-selecionar-template-fvm');
+  toast('FVM iniciada com sucesso','success');
+  verFVM(novaFVM.id);
+}
+
+function verFVM(fvmId){
+  const fvm=DB.getArr('fvm').find(f=>f.id===fvmId);
+  if(!fvm) return;
+  
+  const obra=DB.getArr('obras').find(o=>o.id===fvm.obraId);
+  const tpl=DB.getArr('templates_fvm').find(t=>t.id===fvm.templateId);
+  const inspector=DB.getArr('usuarios').find(u=>u.id===fvm.inspetorId);
+  
+  const m=document.getElementById('main-content');
+  document.querySelectorAll('.nav-item').forEach(n=>n.classList.remove('active'));
+  document.getElementById('nav-fvm').classList.add('active');
+  document.getElementById('topbar-section').textContent=fvm.cod;
+  
+  m.innerHTML=`
+    <div style="margin-bottom:14px;display:flex;align-items:center;gap:10px;flex-wrap:wrap">
+      <button class="btn btn-ghost btn-sm" onclick="renderFVM(document.getElementById('main-content'))">← FVM</button>
+      ${fvm.status==='andamento'?`<button class="btn btn-primary btn-sm" onclick="salvarFVM('${fvm.id}')">Salvar</button>`:''}
+      ${fvm.status==='encerrada'?`<span class="tag tag-ok" style="font-size:12px;padding:5px 12px">✓ Encerrada em ${new Date(fvm.fechamento).toLocaleDateString('pt-BR')}</span>`:''}
+    </div>
+    <div class="fvs-dh">
+      <div style="display:flex;align-items:flex-start;justify-content:space-between;flex-wrap:wrap;gap:10px">
+        <div>
+          <div style="font-size:11px;color:var(--text3);font-family:var(--font-mono);margin-bottom:4px">${fvm.cod}</div>
+          <div class="fvs-dh-nome">${fvm.servico}</div>
+          <div style="font-size:12px;color:var(--text3);margin-top:2px">${tpl?.revisao||'Rev. 00'}</div>
+        </div>
+        <span class="tag ${fvm.status==='encerrada'?'tag-ok':'tag-and'}" style="font-size:12px;padding:5px 12px">${fvm.status==='encerrada'?'ENCERRADA':'EM ANDAMENTO'}</span>
+      </div>
+      <div class="fvs-dh-meta">
+        <div class="meta-item"><span>Obra</span><strong>${obra?.nome||'—'}</strong></div>
+        <div class="meta-item"><span>Inspetor</span><strong>${inspector?.nome||'—'}</strong></div>
+        <div class="meta-item"><span>Abertura</span><strong>${new Date(fvm.abertura).toLocaleDateString('pt-BR')}</strong></div>
+      </div>
+    </div>
+    ${renderFormFVM(fvm,tpl, fvm.status==='encerrada')}
+  `;
+}
+
+function renderFormFVM(fvm, tpl, encerrada=false){
+  const dados=fvm.dados || {};
+  const inspector=DB.getArr('usuarios').find(u=>u.id===fvm.inspetorId);
+  return`
+    <div class="table-wrap" style="padding:16px">
+      <div style="font-size:13px;font-weight:600;margin-bottom:12px">Dados da Verificação <span style="color:var(--red);font-size:11px">* Todos os campos são obrigatórios</span></div>
+      <div class="meta-grid">
+        <div class="field"><label>Responsável pela inspeção *</label><input type="text" value="${esc(dados.responsavel||inspector?.nome||'')}" ${encerrada?'disabled':''} required onchange="atualizarDadosFVM('${fvm.id}','responsavel',this.value)" placeholder="Nome do responsável"></div>
+        <div class="field"><label>Registro de Compra n° *</label><input type="text" value="${esc(dados.registroCompra||'')}" ${encerrada?'disabled':''} required onchange="atualizarDadosFVM('${fvm.id}','registroCompra',this.value)" placeholder="Número do registro"></div>
+        <div class="field"><label>Data do recebimento *</label><input type="date" value="${dados.dataRecebimento||''}" ${encerrada?'disabled':''} required onchange="atualizarDadosFVM('${fvm.id}','dataRecebimento',this.value)"></div>
+        <div class="field"><label>Fornecedor *</label><input type="text" value="${esc(dados.fornecedor||'')}" ${encerrada?'disabled':''} required onchange="atualizarDadosFVM('${fvm.id}','fornecedor',this.value)" placeholder="Nome do fornecedor"></div>
+      </div>
+      <div class="divider"></div>
+      <div style="font-size:13px;font-weight:600;margin-bottom:12px">Critérios de Verificação <span style="color:var(--red);font-size:11px">* Todos os critérios são obrigatórios</span></div>
+      ${(tpl?.criterios||[]).map((c,i)=>`
+        <div style="background:var(--bg3);border:1px solid var(--border);border-radius:var(--radius);padding:12px 14px;margin-bottom:10px">
+          <div style="font-size:13px;font-weight:600;margin-bottom:8px">${i+1}. ${esc(c.titulo)} *</div>
+          <div style="font-size:12px;color:var(--text3);margin-bottom:8px">Tipo: ${TIPOS_RESPOSTA_FVM.find(t=>t.id===c.tipo)?.label||'SIM / NÃO'}</div>
+          <div class="field">
+            <label>Resposta *</label>
+            ${renderCampoRespostaFVM(c, dados.resultados?.[c.id] || '', fvm.id, encerrada)}
+          </div>
+        </div>
+      `).join('')}
+      <div class="divider"></div>
+      <div style="font-size:13px;font-weight:600;margin-bottom:12px">Resultado da Inspeção <span style="color:var(--red);font-size:11px">* Campos obrigatórios</span></div>
+      <div style="background:var(--bg3);border:1px solid var(--border);border-radius:var(--radius);padding:16px">
+        <div class="field" style="margin-bottom:16px">
+          <label style="font-weight:600;color:var(--text)">Resultado da inspeção *</label>
+          <div style="display:flex;gap:20px;margin-top:8px">
+            <label style="display:flex;align-items:center;gap:6px;cursor:pointer">
+              <input type="radio" name="resultado_fvm" value="aprovado" ${dados.resultado==='aprovado'?'checked':''} ${encerrada?'disabled':''} required onchange="atualizarDadosFVM('${fvm.id}','resultado',this.value)">
+              <span>Aprovado</span>
+            </label>
+            <label style="display:flex;align-items:center;gap:6px;cursor:pointer">
+              <input type="radio" name="resultado_fvm" value="aprovado_com_ressalvas" ${dados.resultado==='aprovado_com_ressalvas'?'checked':''} ${encerrada?'disabled':''} required onchange="atualizarDadosFVM('${fvm.id}','resultado',this.value)">
+              <span>Aprovado com ressalvas</span>
+            </label>
+            <label style="display:flex;align-items:center;gap:6px;cursor:pointer">
+              <input type="radio" name="resultado_fvm" value="reprovado" ${dados.resultado==='reprovado'?'checked':''} ${encerrada?'disabled':''} required onchange="atualizarDadosFVM('${fvm.id}','resultado',this.value)">
+              <span>Reprovado</span>
+            </label>
+          </div>
+        </div>
+        <div class="field">
+          <label style="font-weight:600;color:var(--text)">Nota final *</label>
+          <textarea ${encerrada?'disabled':''} required onchange="atualizarDadosFVM('${fvm.id}','notaFinal',this.value)" placeholder="Observações sobre o resultado final" style="background:var(--bg2);border:1px solid var(--border);border-radius:var(--radius);padding:8px 12px;color:var(--text);width:100%;margin-top:8px;min-height:80px;resize:vertical">${esc(dados.notaFinal||'')}</textarea>
+        </div>
+      </div>
+    </div>
+  `;
+}
+
+function renderCampoRespostaFVM(criterio, valor, fvmId, encerrada=false){
+  const campoId=`campo_${criterio.id}`;
+  if(criterio.tipo==='simnao'){
+    return `
+      <div style="display:flex;gap:20px">
+        <label style="display:flex;align-items:center;gap:6px;cursor:pointer">
+          <input type="radio" name="${campoId}" value="SIM" ${valor==='SIM'?'checked':''} ${encerrada?'disabled':''} required onchange="atualizarResultadoFVM('${fvmId}','${criterio.id}','SIM')"> SIM
+        </label>
+        <label style="display:flex;align-items:center;gap:6px;cursor:pointer">
+          <input type="radio" name="${campoId}" value="NÃO" ${valor==='NÃO'?'checked':''} ${encerrada?'disabled':''} required onchange="atualizarResultadoFVM('${fvmId}','${criterio.id}','NÃO')"> NÃO
+        </label>
+      </div>
+    `;
+  }
+  if(criterio.tipo==='texto'){
+    return `<input type="text" value="${esc(valor)}" ${encerrada?'disabled':''} required onchange="atualizarResultadoFVM('${fvmId}','${criterio.id}',this.value)" placeholder="Digite sua resposta" style="width:100%">`;
+  }
+  if(criterio.tipo==='numero'){
+    return `<input type="number" value="${valor}" ${encerrada?'disabled':''} required onchange="atualizarResultadoFVM('${fvmId}','${criterio.id}',this.value)" placeholder="0" style="width:100%">`;
+  }
+  if(criterio.tipo==='data'){
+    return `<input type="date" value="${valor}" ${encerrada?'disabled':''} required onchange="atualizarResultadoFVM('${fvmId}','${criterio.id}',this.value)" style="width:100%">`;
+  }
+  if(criterio.tipo==='hora'){
+    return `<input type="time" value="${valor}" ${encerrada?'disabled':''} required onchange="atualizarResultadoFVM('${fvmId}','${criterio.id}',this.value)" style="width:100%">`;
+  }
+  return `<input type="text" value="${esc(valor)}" ${encerrada?'disabled':''} required onchange="atualizarResultadoFVM('${fvmId}','${criterio.id}',this.value)" placeholder="Digite sua resposta" style="width:100%">`;
+}
+
+function atualizarDadosFVM(fvmId, campo, valor){
+  const fvm=DB.getArr('fvm').find(f=>f.id===fvmId);
+  if(!fvm) return;
+  
+  const novosDados={...(fvm.dados || {})};
+  novosDados[campo]=valor;
+  
+  DB.update('fvm', fvmId, {dados: novosDados});
+}
+
+function atualizarResultadoFVM(fvmId, criterioId, valor){
+  const fvm=DB.getArr('fvm').find(f=>f.id===fvmId);
+  if(!fvm) return;
+  
+  const novosDados={...(fvm.dados || {})};
+  if(!novosDados.resultados) novosDados.resultados={};
+  novosDados.resultados[criterioId]=valor;
+  
+  DB.update('fvm', fvmId, {dados: novosDados});
+}
+
+function salvarFVM(fvmId){
+  const fvm=DB.getArr('fvm').find(f=>f.id===fvmId);
+  if(!fvm) return;
+  
+  const dados=fvm.dados || {};
+  const tpl=DB.getArr('templates_fvm').find(t=>t.id===fvm.templateId);
+  
+  // Validar campos obrigatórios dos dados da verificação
+  const camposObrigatorios=['responsavel','registroCompra','dataRecebimento','fornecedor','resultado','notaFinal'];
+  const camposFaltantes=camposObrigatorios.filter(campo=>!dados[campo] || dados[campo].trim() === '');
+  
+  if(camposFaltantes.length > 0){
+    const nomesCampos={
+      'responsavel':'Responsável pela inspeção',
+      'registroCompra':'Registro de Compra',
+      'dataRecebimento':'Data do recebimento',
+      'fornecedor':'Fornecedor',
+      'resultado':'Resultado da inspeção',
+      'notaFinal':'Nota final'
+    };
+    const camposNomes=camposFaltantes.map(c=>nomesCampos[c]).join(', ');
+    toast(`Preencha os campos obrigatórios: ${camposNomes}`,'error');
+    return;
+  }
+  
+  // Validar critérios
+  const resultados=dados.resultados || {};
+  const criteriosPreenchidos=Object.keys(resultados).filter(key=>resultados[key] && resultados[key].trim() !== '').length;
+  const totalCriterios=tpl?.criterios?.length || 0;
+  
+  if(criteriosPreenchidos < totalCriterios){
+    toast(`Preencha todos os critérios obrigatórios (${criteriosPreenchidos}/${totalCriterios} preenchidos)`,'error');
+    return;
+  }
+  
+  // Usar o resultado e nota final informados pelo usuário em vez de calcular automaticamente
+  const resultadoFinal=dados.resultado;
+  const notaFinalTexto=dados.notaFinal;
+  
+  // Atualizar FVM com os resultados
+  DB.update('fvm', fvmId, {
+    dados: dados,
+    resultado: resultadoFinal,
+    notaFinal: notaFinalTexto,
+    fechamento: new Date().toISOString(),
+    status: 'encerrada'
+  });
+  
+  toast('FVM salva e encerrada com sucesso','success');
+  renderFVM(document.getElementById('main-content'));
+}
+
 // ── TEMPLATE FVM ─────────────────────────────────────
 let fvmTemplateAtivoId=null,fvmEditorNome='',fvmEditorCriterios=[];
 const TIPOS_RESPOSTA_FVM=[
@@ -1466,13 +1791,11 @@ function selecionarTemplateFVM(id){
 }
 
 function novoTemplateFVM(){
-  const lista=getTemplatesFVM();
-  const agora=new Date().toISOString();
-  const novoBase={id:'tf'+Date.now(),nome:'Novo modelo FVM',revisao:'Rev. 01',atualizadoEm:agora,cabecalho:cabecalhoFVMBase(),criterios:[]};
-  const novo={...novoBase,historico:[{rev:'Rev. 01',data:agora,descricao:'Versão inicial',snapshot:{nome:novoBase.nome,cabecalho:[...novoBase.cabecalho],criterios:[]}}]};
-  DB.set('templates_fvm',[...lista,novo]);
-  toast('Novo modelo criado','success');
-  renderTemplatesFVM(document.getElementById('main-content'));
+  // Initialize empty template data for editing
+  fvmTemplateAtivoId = null;
+  fvmEditorNome = 'Novo modelo FVM';
+  fvmEditorCriterios = [];
+  renderNovoTemplateFVM();
 }
 
 function renderTemplatesFVM(m){
@@ -1498,12 +1821,74 @@ function renderTemplatesFVM(m){
       </tbody></table></div></div>`;
 }
 
+function renderNovoTemplateFVM(){
+  const m=document.getElementById('main-content');
+  m.innerHTML=`
+    <div style="margin-bottom:14px"><button class="btn btn-ghost btn-sm" onclick="renderTemplatesFVM(document.getElementById('main-content'))">← Voltar para templates</button></div>
+    <div class="page-header">
+      <div><div class="page-title">Novo Template FVM</div><div class="page-sub">Preencha os dados do novo modelo</div></div>
+      <button class="btn btn-primary" onclick="salvarNovoTemplateFVM()">Salvar como Rev. 00</button>
+    </div>
+    <div class="table-wrap" style="padding:16px">
+      <div class="field"><label>Nome do template *</label><input id="fvm-tpl-nome" value="${esc(fvmEditorNome)}" oninput="fvmEditorNome=this.value"></div>
+      <div class="divider"></div>
+      <div style="font-size:13px;font-weight:600;margin-bottom:10px">Cabeçalho padrão (fixo do modelo)</div>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:14px">
+        ${cabecalhoFVMBase().map(c=>`<div style="background:var(--bg3);border:1px solid var(--border);border-radius:var(--radius);padding:10px 12px;font-size:12px;color:var(--text2)">${esc(c)}</div>`).join('')}
+      </div>
+      <div class="divider"></div>
+      <div style="display:flex;align-items:center;justify-content:space-between;gap:8px;flex-wrap:wrap;margin-bottom:10px">
+        <div style="font-size:13px;font-weight:600">Critérios personalizados</div>
+        <button class="btn btn-ghost btn-sm" onclick="adicionarCriterioFVM()">+ Adicionar critério</button>
+      </div>
+      ${fvmEditorCriterios.length?fvmEditorCriterios.map((c,i)=>`
+        <div style="background:var(--bg3);border:1px solid var(--border);border-radius:var(--radius);padding:12px 14px;margin-bottom:10px">
+          <div style="display:grid;grid-template-columns:1.5fr 1fr auto;gap:8px;align-items:end">
+            <div class="field" style="margin:0"><label>Critério ${i+1} *</label><input value="${esc(c.titulo)}" oninput="atualizarCriterioFVM('${c.id}','titulo',this.value)" placeholder="Ex: Temperatura do material na entrega"></div>
+            <div class="field" style="margin:0"><label>Tipo de resposta</label><select onchange="atualizarCriterioFVM('${c.id}','tipo',this.value)">${TIPOS_RESPOSTA_FVM.map(t=>`<option value="${t.id}"${t.id===c.tipo?' selected':''}>${t.label}</option>`).join('')}</select></div>
+            <button class="btn btn-danger btn-xs" onclick="removerCriterioFVM('${c.id}')">Remover</button>
+          </div>
+          <div style="margin-top:8px;font-size:12px;color:var(--text3)">Prévia da resposta: ${renderRespostaTemplateFVM(c.tipo)}</div>
+        </div>
+      `).join(''):`<div class="empty" style="padding:22px 10px"><div class="empty-title">Nenhum critério personalizado</div><div class="empty-desc">Use "+ Adicionar critério" para montar o modelo.</div></div>`}
+      <div class="divider"></div>
+      <div style="font-size:13px;font-weight:600;margin-bottom:12px">Resultado da Inspeção (campos fixos do template)</div>
+      <div style="background:var(--bg3);border:1px solid var(--border);border-radius:var(--radius);padding:16px">
+        <div class="field" style="margin-bottom:16px">
+          <label style="font-weight:600;color:var(--text)">Resultado da inspeção</label>
+          <div style="display:flex;gap:20px;margin-top:8px">
+            <label style="display:flex;align-items:center;gap:6px;cursor:pointer">
+              <input type="radio" name="resultado_tpl" value="aprovado" checked disabled>
+              <span>Aprovado</span>
+            </label>
+            <label style="display:flex;align-items:center;gap:6px;cursor:pointer">
+              <input type="radio" name="resultado_tpl" value="aprovado_com_ressalvas" disabled>
+              <span>Aprovado com ressalvas</span>
+            </label>
+            <label style="display:flex;align-items:center;gap:6px;cursor:pointer">
+              <input type="radio" name="resultado_tpl" value="reprovado" disabled>
+              <span>Reprovado</span>
+            </label>
+          </div>
+        </div>
+        <div class="field">
+          <label style="font-weight:600;color:var(--text)">Nota final</label>
+          <input type="text" placeholder="Observações sobre o resultado final" disabled style="background:var(--bg2);border:1px solid var(--border);border-radius:var(--radius);padding:8px 12px;color:var(--text2);width:100%;margin-top:8px">
+        </div>
+      </div>
+    </div>`;
+}
+
 function renderEditorTemplateFVM(id){
   const tpl=getTemplatesFVM().find(t=>t.id===id);
   if(!tpl){toast('Template não encontrado','error');return;}
-  fvmTemplateAtivoId=id;
-  fvmEditorNome=tpl.nome;
-  fvmEditorCriterios=(tpl.criterios||[]).map(c=>({...c}));
+  
+  // Only initialize fvmEditorCriterios if we're opening a different template
+  if(fvmTemplateAtivoId !== id){
+    fvmTemplateAtivoId=id;
+    fvmEditorNome=tpl.nome;
+    fvmEditorCriterios=(tpl.criterios||[]).map(c=>({...c}));
+  }
   const m=document.getElementById('main-content');
   m.innerHTML=`
     <div style="margin-bottom:14px"><button class="btn btn-ghost btn-sm" onclick="renderTemplatesFVM(document.getElementById('main-content'))">← Voltar para templates</button></div>
@@ -1533,17 +1918,52 @@ function renderEditorTemplateFVM(id){
           <div style="margin-top:8px;font-size:12px;color:var(--text3)">Prévia da resposta: ${renderRespostaTemplateFVM(c.tipo)}</div>
         </div>
       `).join(''):`<div class="empty" style="padding:22px 10px"><div class="empty-title">Nenhum critério personalizado</div><div class="empty-desc">Use "+ Adicionar critério" para montar o modelo.</div></div>`}
+      <div class="divider"></div>
+      <div style="font-size:13px;font-weight:600;margin-bottom:12px">Resultado da Inspeção (campos fixos do template)</div>
+      <div style="background:var(--bg3);border:1px solid var(--border);border-radius:var(--radius);padding:16px">
+        <div class="field" style="margin-bottom:16px">
+          <label style="font-weight:600;color:var(--text)">Resultado da inspeção</label>
+          <div style="display:flex;gap:20px;margin-top:8px">
+            <label style="display:flex;align-items:center;gap:6px;cursor:pointer">
+              <input type="radio" name="resultado_tpl" value="aprovado" checked disabled>
+              <span>Aprovado</span>
+            </label>
+            <label style="display:flex;align-items:center;gap:6px;cursor:pointer">
+              <input type="radio" name="resultado_tpl" value="aprovado_com_ressalvas" disabled>
+              <span>Aprovado com ressalvas</span>
+            </label>
+            <label style="display:flex;align-items:center;gap:6px;cursor:pointer">
+              <input type="radio" name="resultado_tpl" value="reprovado" disabled>
+              <span>Reprovado</span>
+            </label>
+          </div>
+        </div>
+        <div class="field">
+          <label style="font-weight:600;color:var(--text)">Nota final</label>
+          <input type="text" placeholder="Observações sobre o resultado final" disabled style="background:var(--bg2);border:1px solid var(--border);border-radius:var(--radius);padding:8px 12px;color:var(--text2);width:100%;margin-top:8px">
+        </div>
+      </div>
     </div>`;
 }
 
 function adicionarCriterioFVM(){
   fvmEditorCriterios.push({id:mkId('cfvm'),titulo:'',tipo:'simnao'});
-  renderEditorTemplateFVM(fvmTemplateAtivoId);
+  // Check if we're editing an existing template or creating a new one
+  if(fvmTemplateAtivoId){
+    renderEditorTemplateFVM(fvmTemplateAtivoId);
+  } else {
+    renderNovoTemplateFVM();
+  }
 }
 
 function removerCriterioFVM(id){
   fvmEditorCriterios=fvmEditorCriterios.filter(c=>c.id!==id);
-  renderEditorTemplateFVM(fvmTemplateAtivoId);
+  // Check if we're editing an existing template or creating a new one
+  if(fvmTemplateAtivoId){
+    renderEditorTemplateFVM(fvmTemplateAtivoId);
+  } else {
+    renderNovoTemplateFVM();
+  }
 }
 
 function atualizarCriterioFVM(id,campo,valor){
@@ -1557,6 +1977,32 @@ function renderRespostaTemplateFVM(tipo){
   if(tipo==='data')return`<input type="date" disabled style="background:var(--bg2);border:1px solid var(--border);border-radius:var(--radius);padding:7px 9px;color:var(--text3)">`;
   if(tipo==='hora')return`<input type="time" disabled style="background:var(--bg2);border:1px solid var(--border);border-radius:var(--radius);padding:7px 9px;color:var(--text3)">`;
   return`<label style="margin-right:10px"><input type="checkbox" disabled> SIM</label><label><input type="checkbox" disabled> NÃO</label>`;
+}
+
+function salvarNovoTemplateFVM(){
+  const nome=(fvmEditorNome||'').trim();
+  if(!nome){toast('Preencha o nome do template FVM','error');return;}
+  if(fvmEditorCriterios.some(c=>!c.titulo.trim())){toast('Preencha o título em todos os critérios personalizados','error');return;}
+  
+  const agora=new Date().toISOString();
+  const novoId='tf'+Date.now();
+  const criterios=fvmEditorCriterios.map(c=>({...c}));
+  const snapshot={nome,cabecalho:[...cabecalhoFVMBase()],criterios:criterios.map(c=>({...c}))};
+  
+  const novoTemplate={
+    id:novoId,
+    nome:nome,
+    revisao:'Rev. 00',
+    atualizadoEm:agora,
+    cabecalho:[...cabecalhoFVMBase()],
+    criterios:criterios,
+    historico:[{rev:'Rev. 00',data:agora,descricao:'Versão inicial',snapshot}]
+  };
+  
+  const lista=getTemplatesFVM();
+  DB.set('templates_fvm',[...lista,novoTemplate]);
+  toast('Novo template salvo como Rev. 00','success');
+  renderTemplatesFVM(document.getElementById('main-content'));
 }
 
 function salvarEdicaoTemplateFVM(){
