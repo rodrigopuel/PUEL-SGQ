@@ -362,6 +362,10 @@ tr:hover td{background:var(--bg3);color:var(--text)}
             <svg class="gear-menu-icon" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5"><rect x="1" y="1" width="14" height="14" rx="2"/><path d="M5 5h6M5 8h6M5 11h4"/></svg>
             Templates FVS
           </div>
+          <div class="gear-menu-item" onclick="navegar('templates-fvm')">
+            <svg class="gear-menu-icon" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5"><rect x="2" y="2" width="12" height="12" rx="2"/><path d="M5 6h6M5 9h6M5 12h4"/></svg>
+            Template FVM
+          </div>
           <div class="gear-menu-item" onclick="navegar('usuarios')">
             <svg class="gear-menu-icon" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5"><circle cx="6" cy="5" r="3"/><path d="M1 14c0-3 2-5 5-5"/><circle cx="12" cy="8" r="2"/><path d="M10 14c0-2 1-3 2-3s2 1 2 3"/></svg>
             Usuários
@@ -734,7 +738,7 @@ function iniciarApp(){
 }
 function mostrarTela(id){document.querySelectorAll('.screen').forEach(s=>s.classList.remove('active'));document.getElementById(id).classList.add('active');}
 
-const SECOES={dashboard:'Dashboard',alertas:'Alertas',obras:'Obras',fvs:'FVS',templates:'Templates FVS',dossie:'Dossiê / PDF',usuarios:'Usuários'};
+const SECOES={dashboard:'Dashboard',alertas:'Alertas',obras:'Obras',fvs:'FVS',templates:'Templates FVS','templates-fvm':'Template FVM',dossie:'Dossiê / PDF',usuarios:'Usuários'};
 function navegar(s){
   document.querySelectorAll('.nav-item').forEach(n=>n.classList.remove('active'));
   const nav=document.getElementById('nav-'+s);if(nav)nav.classList.add('active');
@@ -742,7 +746,7 @@ function navegar(s){
   // Update gear menu active state
   document.querySelectorAll('.gear-menu-item').forEach(item=>item.classList.remove('active'));
   const gearItems = document.querySelectorAll('.gear-menu-item');
-  const gearIndex = ['obras','templates','usuarios'].indexOf(s);
+  const gearIndex = ['obras','templates','templates-fvm','usuarios'].indexOf(s);
   if (gearIndex !== -1) {
     gearItems[gearIndex].classList.add('active');
   }
@@ -752,7 +756,7 @@ function navegar(s){
   
   document.getElementById('topbar-section').textContent=SECOES[s]||s;
   const m=document.getElementById('main-content');
-  ({dashboard:renderDashboard,alertas:renderAlertas,obras:renderObras,fvs:renderFVS,templates:renderTemplates,dossie:renderDossie,usuarios:renderUsuarios}[s]||function(){})(m);
+  ({dashboard:renderDashboard,alertas:renderAlertas,obras:renderObras,fvs:renderFVS,templates:renderTemplates,'templates-fvm':renderTemplatesFVM,dossie:renderDossie,usuarios:renderUsuarios}[s]||function(){})(m);
 }
 
 function calcStats(fvs){
@@ -1379,6 +1383,236 @@ function confirmarEncerramento(){
   fecharModal('modal-encerrar');toast('FVS encerrada e arquivada','success');verFVS(fvsAtualId);
 }
 
+// ── TEMPLATE FVM ─────────────────────────────────────
+let fvmTemplateAtivoId=null,fvmEditorNome='',fvmEditorCriterios=[];
+const TIPOS_RESPOSTA_FVM=[
+  {id:'simnao',label:'SIM / NÃO'},
+  {id:'texto',label:'Texto livre'},
+  {id:'numero',label:'Resultado numérico'},
+  {id:'data',label:'Data'},
+  {id:'hora',label:'Hora'}
+];
+
+function cabecalhoFVMBase(){
+  return['Responsável pela inspeção','Registro de Compra n°','Data do recebimento','Fornecedor'];
+}
+
+function templateFVMDefault(){
+  const agora=new Date().toISOString();
+  const base={
+    id:'tf1',
+    nome:'Materiais de Construção Civil',
+    revisao:'Rev. 01',
+    atualizadoEm:agora,
+    cabecalho:cabecalhoFVMBase(),
+    criterios:[]
+  };
+  return{
+    ...base,
+    historico:[{rev:'Rev. 01',data:agora,descricao:'Versão inicial',snapshot:{nome:base.nome,cabecalho:[...base.cabecalho],criterios:[]}}]
+  };
+}
+
+function normalizarTemplateFVM(t){
+  const agora=new Date().toISOString();
+  const tpl={
+    id:t?.id||('tf'+Date.now()),
+    nome:t?.nome||'Template FVM',
+    revisao:t?.revisao||'Rev. 01',
+    atualizadoEm:t?.atualizadoEm||agora,
+    cabecalho:Array.isArray(t?.cabecalho)&&t.cabecalho.length?t.cabecalho:cabecalhoFVMBase(),
+    criterios:Array.isArray(t?.criterios)?t.criterios.map(c=>({id:c.id||mkId('cfvm'),titulo:c.titulo||'',tipo:c.tipo||'simnao'})):[]
+  };
+  const hist=Array.isArray(t?.historico)?t.historico:[];
+  if(!hist.length){
+    tpl.historico=[{rev:tpl.revisao,data:tpl.atualizadoEm,descricao:'Versão inicial',snapshot:{nome:tpl.nome,cabecalho:[...tpl.cabecalho],criterios:tpl.criterios.map(c=>({...c}))}}];
+    return tpl;
+  }
+  tpl.historico=hist.map(h=>({
+    rev:h.rev||tpl.revisao,
+    data:h.data||tpl.atualizadoEm,
+    descricao:h.descricao||'Edição do template',
+    snapshot:h.snapshot||{nome:tpl.nome,cabecalho:[...tpl.cabecalho],criterios:tpl.criterios.map(c=>({...c}))}
+  }));
+  return tpl;
+}
+
+function proxRevFVM(atual){
+  const m=(atual||'').match(/Rev\. (\d+)/);
+  return`Rev. ${String((m?parseInt(m[1],10):0)+1).padStart(2,'0')}`;
+}
+
+function getTemplatesFVM(){
+  const lista=DB.getArr('templates_fvm');
+  if(!lista.length){
+    const padrao=templateFVMDefault();
+    DB.set('templates_fvm',[padrao]);
+    return[padrao];
+  }
+  const normalizados=lista.map(normalizarTemplateFVM);
+  DB.set('templates_fvm',normalizados);
+  return normalizados;
+}
+
+function getTemplateFVMAtivo(){
+  const lista=getTemplatesFVM();
+  if(!fvmTemplateAtivoId||!lista.find(t=>t.id===fvmTemplateAtivoId))fvmTemplateAtivoId=lista[0].id;
+  return lista.find(t=>t.id===fvmTemplateAtivoId)||lista[0];
+}
+
+function selecionarTemplateFVM(id){
+  fvmTemplateAtivoId=id;
+  renderEditorTemplateFVM(id);
+}
+
+function novoTemplateFVM(){
+  const lista=getTemplatesFVM();
+  const agora=new Date().toISOString();
+  const novoBase={id:'tf'+Date.now(),nome:'Novo modelo FVM',revisao:'Rev. 01',atualizadoEm:agora,cabecalho:cabecalhoFVMBase(),criterios:[]};
+  const novo={...novoBase,historico:[{rev:'Rev. 01',data:agora,descricao:'Versão inicial',snapshot:{nome:novoBase.nome,cabecalho:[...novoBase.cabecalho],criterios:[]}}]};
+  DB.set('templates_fvm',[...lista,novo]);
+  toast('Novo modelo criado','success');
+  renderTemplatesFVM(document.getElementById('main-content'));
+}
+
+function renderTemplatesFVM(m){
+  const lista=getTemplatesFVM();
+  m.innerHTML=`
+    <div class="page-header">
+      <div><div class="page-title">Template FVM</div><div class="page-sub">${lista.length} modelo${lista.length!==1?'s':''} cadastrado${lista.length!==1?'s':''}</div></div>
+      <button class="btn btn-primary" onclick="novoTemplateFVM()">+ Novo modelo</button>
+    </div>
+    <div class="table-wrap"><div class="table-scroll"><table>
+      <thead><tr><th>Template</th><th>Revisão atual</th><th>Atualizado em</th><th>Critérios</th><th>Ações</th></tr></thead>
+      <tbody>${lista.map(t=>`
+        <tr>
+          <td style="font-weight:600;color:var(--text)">${esc(t.nome)}</td>
+          <td><span class="tag tag-rev">${t.revisao}</span></td>
+          <td style="font-family:var(--font-mono);font-size:11px">${new Date(t.atualizadoEm).toLocaleDateString('pt-BR',{day:'2-digit',month:'2-digit',year:'numeric',hour:'2-digit',minute:'2-digit'})}</td>
+          <td>${t.criterios.length}</td>
+          <td class="td-acoes"><div style="display:flex;gap:6px">
+            <button class="btn btn-secondary btn-xs" onclick="selecionarTemplateFVM('${t.id}')">Editar</button>
+            <button class="btn btn-ghost btn-xs" onclick="verHistoricoFVM('${t.id}')">Revisões</button>
+          </div></td>
+        </tr>`).join('')}
+      </tbody></table></div></div>`;
+}
+
+function renderEditorTemplateFVM(id){
+  const tpl=getTemplatesFVM().find(t=>t.id===id);
+  if(!tpl){toast('Template não encontrado','error');return;}
+  fvmTemplateAtivoId=id;
+  fvmEditorNome=tpl.nome;
+  fvmEditorCriterios=(tpl.criterios||[]).map(c=>({...c}));
+  const m=document.getElementById('main-content');
+  m.innerHTML=`
+    <div style="margin-bottom:14px"><button class="btn btn-ghost btn-sm" onclick="renderTemplatesFVM(document.getElementById('main-content'))">← Voltar para templates</button></div>
+    <div class="page-header">
+      <div><div class="page-title">Editar Template FVM</div><div class="page-sub">${esc(tpl.nome)} · revisão atual ${tpl.revisao}</div></div>
+      <button class="btn btn-primary" onclick="salvarEdicaoTemplateFVM()">Salvar e gerar nova revisão</button>
+    </div>
+    <div class="table-wrap" style="padding:16px">
+      <div class="field"><label>Nome do template *</label><input id="fvm-tpl-nome" value="${esc(fvmEditorNome)}" oninput="fvmEditorNome=this.value"></div>
+      <div class="divider"></div>
+      <div style="font-size:13px;font-weight:600;margin-bottom:10px">Cabeçalho padrão (fixo do modelo)</div>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:14px">
+        ${(tpl.cabecalho||cabecalhoFVMBase()).map(c=>`<div style="background:var(--bg3);border:1px solid var(--border);border-radius:var(--radius);padding:10px 12px;font-size:12px;color:var(--text2)">${esc(c)}</div>`).join('')}
+      </div>
+      <div class="divider"></div>
+      <div style="display:flex;align-items:center;justify-content:space-between;gap:8px;flex-wrap:wrap;margin-bottom:10px">
+        <div style="font-size:13px;font-weight:600">Critérios personalizados</div>
+        <button class="btn btn-ghost btn-sm" onclick="adicionarCriterioFVM()">+ Adicionar critério</button>
+      </div>
+      ${fvmEditorCriterios.length?fvmEditorCriterios.map((c,i)=>`
+        <div style="background:var(--bg3);border:1px solid var(--border);border-radius:var(--radius);padding:12px 14px;margin-bottom:10px">
+          <div style="display:grid;grid-template-columns:1.5fr 1fr auto;gap:8px;align-items:end">
+            <div class="field" style="margin:0"><label>Critério ${i+1} *</label><input value="${esc(c.titulo)}" oninput="atualizarCriterioFVM('${c.id}','titulo',this.value)" placeholder="Ex: Temperatura do material na entrega"></div>
+            <div class="field" style="margin:0"><label>Tipo de resposta</label><select onchange="atualizarCriterioFVM('${c.id}','tipo',this.value)">${TIPOS_RESPOSTA_FVM.map(t=>`<option value="${t.id}"${t.id===c.tipo?' selected':''}>${t.label}</option>`).join('')}</select></div>
+            <button class="btn btn-danger btn-xs" onclick="removerCriterioFVM('${c.id}')">Remover</button>
+          </div>
+          <div style="margin-top:8px;font-size:12px;color:var(--text3)">Prévia da resposta: ${renderRespostaTemplateFVM(c.tipo)}</div>
+        </div>
+      `).join(''):`<div class="empty" style="padding:22px 10px"><div class="empty-title">Nenhum critério personalizado</div><div class="empty-desc">Use "+ Adicionar critério" para montar o modelo.</div></div>`}
+    </div>`;
+}
+
+function adicionarCriterioFVM(){
+  fvmEditorCriterios.push({id:mkId('cfvm'),titulo:'',tipo:'simnao'});
+  renderEditorTemplateFVM(fvmTemplateAtivoId);
+}
+
+function removerCriterioFVM(id){
+  fvmEditorCriterios=fvmEditorCriterios.filter(c=>c.id!==id);
+  renderEditorTemplateFVM(fvmTemplateAtivoId);
+}
+
+function atualizarCriterioFVM(id,campo,valor){
+  const c=fvmEditorCriterios.find(x=>x.id===id);if(!c)return;
+  c[campo]=valor;
+}
+
+function renderRespostaTemplateFVM(tipo){
+  if(tipo==='texto')return`<input type="text" disabled placeholder="Resposta em texto" style="width:220px;max-width:100%;background:var(--bg2);border:1px solid var(--border);border-radius:var(--radius);padding:7px 9px;color:var(--text3)">`;
+  if(tipo==='numero')return`<input type="number" disabled placeholder="0" style="width:120px;background:var(--bg2);border:1px solid var(--border);border-radius:var(--radius);padding:7px 9px;color:var(--text3)">`;
+  if(tipo==='data')return`<input type="date" disabled style="background:var(--bg2);border:1px solid var(--border);border-radius:var(--radius);padding:7px 9px;color:var(--text3)">`;
+  if(tipo==='hora')return`<input type="time" disabled style="background:var(--bg2);border:1px solid var(--border);border-radius:var(--radius);padding:7px 9px;color:var(--text3)">`;
+  return`<label style="margin-right:10px"><input type="checkbox" disabled> SIM</label><label><input type="checkbox" disabled> NÃO</label>`;
+}
+
+function salvarEdicaoTemplateFVM(){
+  const lista=getTemplatesFVM();
+  const tpl=lista.find(t=>t.id===fvmTemplateAtivoId);
+  if(!tpl){toast('Template não encontrado','error');return;}
+  const nome=(fvmEditorNome||'').trim();
+  if(!nome){toast('Preencha o nome do template FVM','error');return;}
+  if(fvmEditorCriterios.some(c=>!c.titulo.trim())){toast('Preencha o título em todos os critérios personalizados','error');return;}
+  const agora=new Date().toISOString();
+  const novaRev=proxRevFVM(tpl.revisao);
+  const criterios=fvmEditorCriterios.map(c=>({...c}));
+  const snapshot={nome,cabecalho:[...(tpl.cabecalho||cabecalhoFVMBase())],criterios:criterios.map(c=>({...c}))};
+  const atualizados=lista.map(t=>t.id!==tpl.id?t:{...t,nome,revisao:novaRev,criterios,atualizadoEm:agora,historico:[...(t.historico||[]),{rev:novaRev,data:agora,descricao:'Edição do template FVM',snapshot}]});
+  DB.set('templates_fvm',atualizados);
+  toast(`Template salvo com nova revisão (${novaRev})`,'success');
+  renderTemplatesFVM(document.getElementById('main-content'));
+}
+
+function verHistoricoFVM(id){
+  const tpl=getTemplatesFVM().find(t=>t.id===id);if(!tpl)return;
+  document.getElementById('hist-titulo').textContent='Revisões — '+tpl.nome;
+  const hist=[...(tpl.historico||[])].reverse();
+  document.getElementById('hist-corpo').innerHTML=hist.map((h,i)=>`
+    <div class="hist-row">
+      <span class="hist-rev ${i===0?'atual':''}">${h.rev}</span>
+      <div class="hist-info"><div class="hist-data">${new Date(h.data).toLocaleDateString('pt-BR',{day:'2-digit',month:'2-digit',year:'numeric',hour:'2-digit',minute:'2-digit'})}</div><div class="hist-desc">${h.descricao}</div></div>
+      <button class="btn btn-ghost btn-xs" onclick="verVersaoTemplateFVM('${tpl.id}',${(tpl.historico||[]).length-1-i})">Ver versão</button>
+    </div>`).join('');
+  document.getElementById('modal-historico').classList.add('open');
+}
+
+function verVersaoTemplateFVM(templateId,histIndex){
+  const tpl=getTemplatesFVM().find(t=>t.id===templateId);if(!tpl)return;
+  const h=(tpl.historico||[])[histIndex];if(!h?.snapshot)return;
+  fecharModal('modal-historico');
+  const s=h.snapshot;
+  const m=document.getElementById('main-content');
+  m.innerHTML=`
+    <div style="margin-bottom:14px"><button class="btn btn-ghost btn-sm" onclick="verHistoricoFVM('${tpl.id}')">← Voltar para revisões</button></div>
+    <div class="page-header">
+      <div><div class="page-title">Versão ${h.rev}</div><div class="page-sub">${esc(tpl.nome)} · visualização histórica</div></div>
+      <button class="btn btn-secondary" onclick="renderTemplatesFVM(document.getElementById('main-content'))">Fechar</button>
+    </div>
+    <div class="table-wrap" style="padding:16px">
+      <div class="field"><label>Nome do template</label><input value="${esc(s.nome||tpl.nome)}" disabled></div>
+      <div class="divider"></div>
+      <div style="font-size:13px;font-weight:600;margin-bottom:10px">Cabeçalho padrão</div>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:14px">
+        ${(s.cabecalho||cabecalhoFVMBase()).map(c=>`<div style="background:var(--bg3);border:1px solid var(--border);border-radius:var(--radius);padding:10px 12px;font-size:12px;color:var(--text2)">${esc(c)}</div>`).join('')}
+      </div>
+      <div class="divider"></div>
+      <div style="font-size:13px;font-weight:600;margin-bottom:10px">Critérios desta versão</div>
+      ${(s.criterios||[]).length?(s.criterios||[]).map((c,i)=>`<div style="background:var(--bg3);border:1px solid var(--border);border-radius:var(--radius);padding:12px 14px;margin-bottom:10px"><strong>${i+1}. ${esc(c.titulo)}</strong><div style="margin-top:6px;font-size:12px;color:var(--text3)">Resposta: ${TIPOS_RESPOSTA_FVM.find(t=>t.id===c.tipo)?.label||'SIM / NÃO'}</div></div>`).join(''):`<div class="empty"><div class="empty-title">Sem critérios nesta versão</div></div>`}
+    </div>`;
+}
 // ── TEMPLATES FVS ─────────────────────────────────────
 function renderTemplates(m){
   const tplsFVS=DB.getArr('templates');
